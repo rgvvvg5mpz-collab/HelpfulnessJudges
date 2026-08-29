@@ -1,0 +1,9 @@
+# Runtime. `render`, `verify` and `check-drift` need only PyYAML — they work
+# with no Arize account and no network, which is how you inspect everything
+# before it touches a tenant.
+PyYAML>=6.0
+
+# Needed only for `provision`, `backfill` and `export` (anything that talks to
+# Arize). Imported lazily, so the rest of the CLI runs without it installed.
+arize>=8.50.0 ; extra == "deploy"
+pandas>=2.0 ; extra == "deploy"
