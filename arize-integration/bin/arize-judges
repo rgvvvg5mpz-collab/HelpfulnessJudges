@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+"""CLI entry point.
+
+Re-execs into the sibling `.venv` when one exists, so the documented quick start
+works whether or not the venv is activated. Without this the shim runs under the
+system interpreter, which has no PyYAML, and every command dies on import.
+"""
+import os
+import pathlib
+import sys
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+VENV_PY = ROOT / ".venv" / "bin" / "python"
+
+# Re-exec once (guarded by an env flag so we cannot loop) if a venv exists and we
+# are not already inside it.
+# NB: compare sys.prefix, not sys.executable. `.venv/bin/python` is a symlink to
+# the system interpreter, so resolving both paths makes them compare EQUAL and the
+# re-exec silently never happens.
+if (
+    VENV_PY.exists()
+    and not os.environ.get("ARIZE_JUDGES_REEXEC")
+    and pathlib.Path(sys.prefix) != (ROOT / ".venv")
+):
+    os.environ["ARIZE_JUDGES_REEXEC"] = "1"
+    os.execv(str(VENV_PY), [str(VENV_PY), __file__, *sys.argv[1:]])
+
+sys.path.insert(0, str(ROOT))
+
+try:
+    import yaml  # noqa: F401
+except ModuleNotFoundError:
+    sys.exit(
+        "arize-judges needs PyYAML.\n"
+        f"  python3 -m venv {ROOT / '.venv'}\n"
+        f"  {ROOT / '.venv/bin/pip'} install -r {ROOT / 'requirements.txt'}\n"
+        "then re-run this command."
+    )
+
+from arize_judges.cli import main  # noqa: E402
+
+raise SystemExit(main())

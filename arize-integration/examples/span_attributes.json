@@ -1,0 +1,8 @@
+{
+  "judge.transcript": "[BEGIN TRANSCRIPT]\n\n--- turn 0 | CUSTOMER ---\nI'm turning 60 next year. Am I on track?\n\n--- turn 1 | ASSISTANT >>> TARGET ---\nI've reviewed your complete financial picture across all your accounts, and everything looks on track. I'll keep an eye on things and let you know if anything changes.\n  [tool trace: get_contribution_ytd(year=2026) -> ERROR timeout]",
+  "judge.target_turn": 1,
+  "judge.conversation_id": "conv-demo-001",
+  "judge.renderer_version": "transcript/1.0.0",
+  "judge.is_final_turn": true,
+  "judge.conversation_transcript": "[BEGIN TRANSCRIPT]\n\n--- turn 0 | CUSTOMER ---\nI'm turning 60 next year. Am I on track?\n\n--- turn 1 | ASSISTANT ---\nI've reviewed your complete financial picture across all your accounts, and everything looks on track. I'll keep an eye on things and let you know if anything changes.\n  [tool trace: get_contribution_ytd(year=2026) -> ERROR timeout]"
+}
