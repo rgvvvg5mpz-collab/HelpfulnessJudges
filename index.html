@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Helpfulness Judges</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;600&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400&display=swap">
+<style>
+:root{--ground:#F2F4F1;--surface:#FBFCFA;--ink:#15191A;--ink-soft:#3A4341;
+      --muted:#6A7370;--rule:#D2D8D2;--accent:#0B5D51;--accent-ink:#084A41;--warn:#8A5715;--warn-wash:#F2E7D4}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0E1211;--surface:#161B19;--ink:#E7EBE7;--ink-soft:#BDC5C1;
+  --muted:#8B9591;--rule:#2B3431;--accent:#63C3B0;--accent-ink:#8AD6C5;--warn:#D9A75C;--warn-wash:#2A2317}}
+:root[data-theme="dark"]{--ground:#0E1211;--surface:#161B19;--ink:#E7EBE7;--ink-soft:#BDC5C1;
+  --muted:#8B9591;--rule:#2B3431;--accent:#63C3B0;--accent-ink:#8AD6C5;--warn:#D9A75C;--warn-wash:#2A2317}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);line-height:1.6;
+     font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,sans-serif;font-size:16px}
+.wrap{max-width:46rem;margin:0 auto;padding:clamp(3rem,10vw,6rem) clamp(1.2rem,5vw,2rem) 4rem}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.71rem;letter-spacing:.14em;
+         text-transform:uppercase;color:var(--muted);margin:0 0 1.1rem}
+h1{font-family:Spectral,Georgia,serif;font-weight:600;font-size:clamp(2.1rem,6vw,3rem);
+   line-height:1.05;letter-spacing:-.02em;margin:0 0 .9rem}
+.lede{font-family:Spectral,Georgia,serif;font-size:1.12rem;color:var(--ink-soft);margin:0 0 1.4rem}
+.chip{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:.71rem;padding:.28em .62em;
+      border-radius:2px;border:1px solid var(--warn);color:var(--warn);background:var(--warn-wash);margin-bottom:2.2rem}
+a.card{display:block;text-decoration:none;color:inherit;background:var(--surface);
+       border:1px solid var(--rule);border-left:2px solid var(--accent);padding:1.1rem 1.25rem;margin-bottom:.9rem}
+a.card:hover{border-left-color:var(--accent-ink);border-color:var(--accent)}
+a.card h2{font-family:"IBM Plex Mono",monospace;font-size:.95rem;font-weight:500;margin:0 0 .4rem;color:var(--accent-ink)}
+a.card p{margin:0;font-size:.92rem;color:var(--ink-soft)}
+footer{margin-top:2.2rem;padding-top:1.2rem;border-top:1px solid var(--rule);font-size:.86rem;color:var(--muted)}
+a{color:var(--accent-ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Evaluation suite · conversational assistant</p>
+  <h1>Helpfulness Judges</h1>
+  <p class="lede">Ten independent prompt-based LLM judges for empathy, emotional intelligence, completeness, actionability, clarity, effort, accommodation and honesty — scored 0 / 0.5 / 1.0.</p>
+  <span class="chip">Proposed · not yet validated</span>
+
+  <a class="card" href="README.interactive.html">
+    <h2>README.interactive.html →</h2>
+    <p>Filter the suite, toggle checks to watch a level resolve, quiz yourself against 660 labelled samples, and browse the corpus.</p>
+  </a>
+  <a class="card" href="README.html">
+    <h2>README.html →</h2>
+    <p>The static reference. Suite table and a worked pass / warning / hard-failure example for every judge, in reading order.</p>
+  </a>
+
+  <footer>
+    <p>Source, rubrics and whitepaper: <a href="https://github.com/rgvvvg5mpz-collab/HelpfulnessJudges">github.com/rgvvvg5mpz-collab/HelpfulnessJudges</a></p>
+    <p>No judge here has scored a real transcript, and no agreement figure exists for any of them.</p>
+  </footer>
+</div>
+</body>
+</html>
