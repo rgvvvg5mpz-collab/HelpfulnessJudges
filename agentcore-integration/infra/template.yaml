@@ -1,0 +1,136 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Helpfulness judge suite on Bedrock AgentCore. Declarative alternative to
+  `agentcore-judges provision`. AgentCore, unlike Arize, has real CloudFormation
+  resource types — this is that path.
+
+  Deliberately does NOT create the Lambda: its deployment package carries the
+  rubrics and the anthropic SDK, so it is built and shipped by your normal
+  application pipeline. Pass its ARN in.
+
+Parameters:
+  JudgeLambdaArn:
+    Type: String
+    Description: ARN of the judge Lambda (see agentcore_judges/handler.py)
+  SpanLogGroup:
+    Type: String
+    Description: Log group receiving the chatbot's OTel spans
+    Default: /aws/bedrock-agentcore/runtimes/chatbot-DEFAULT
+  ServiceName:
+    Type: String
+    Description: Must match service.name on the chatbot's spans
+  EvaluationExecutionRoleArn:
+    Type: String
+    Description: Role AgentCore assumes to read spans and invoke the Lambda
+  EnableOnCreate:
+    Type: String
+    AllowedValues: ['true', 'false']
+    Default: 'false'
+    Description: >
+      Leave false. Backfill and inspect before going continuous — and note that
+      an evaluator is LOCKED while its config is enabled, so a rubric edit needs
+      pause -> update -> resume.
+
+Conditions:
+  StartEnabled: !Equals [!Ref EnableOnCreate, 'true']
+
+Resources:
+  # --- TRACE-level judges: one score per assistant turn ---------------------
+  EmpathicAttunement:
+    Type: AWS::BedrockAgentCore::Evaluator
+    Properties:
+      EvaluatorName: empathic_attunement    # no hyphens: [a-zA-Z][a-zA-Z0-9_]{0,47}
+      Description: Is the emotional engagement anchored to THIS customer's disclosure
+      Level: TRACE
+      EvaluatorConfig:
+        CodeBased:
+          LambdaConfig:
+            LambdaArn: !Ref JudgeLambdaArn
+            LambdaTimeoutInSeconds: 300     # AgentCore max; k=5 must fit
+      Tags: {suite: helpfulness-judges, tier: relational}
+
+  NeedCoverage:
+    Type: AWS::BedrockAgentCore::Evaluator
+    Properties:
+      EvaluatorName: need_coverage
+      Description: Coverage of an enumerated requirement set, never length
+      Level: TRACE
+      EvaluatorConfig:
+        CodeBased:
+          LambdaConfig: {LambdaArn: !Ref JudgeLambdaArn, LambdaTimeoutInSeconds: 300}
+      Tags: {suite: helpfulness-judges, tier: substance}
+
+  Actionability:
+    Type: AWS::BedrockAgentCore::Evaluator
+    Properties:
+      EvaluatorName: actionability
+      Level: TRACE
+      EvaluatorConfig:
+        CodeBased:
+          LambdaConfig: {LambdaArn: !Ref JudgeLambdaArn, LambdaTimeoutInSeconds: 300}
+      Tags: {suite: helpfulness-judges, tier: substance}
+
+  CapabilityHonesty:
+    Type: AWS::BedrockAgentCore::Evaluator
+    Properties:
+      EvaluatorName: capability_honesty
+      Level: TRACE
+      EvaluatorConfig:
+        CodeBased:
+          LambdaConfig: {LambdaArn: !Ref JudgeLambdaArn, LambdaTimeoutInSeconds: 300}
+      Tags: {suite: helpfulness-judges, tier: integrity}
+
+  # --- SESSION-level judges: defects that only exist across turns -----------
+  ConductAdaptation:
+    Type: AWS::BedrockAgentCore::Evaluator
+    Properties:
+      EvaluatorName: conduct_adaptation
+      Description: Did conduct change, not just tone, when the customer struggled
+      Level: SESSION
+      EvaluatorConfig:
+        CodeBased:
+          LambdaConfig: {LambdaArn: !Ref JudgeLambdaArn, LambdaTimeoutInSeconds: 300}
+      Tags: {suite: helpfulness-judges, tier: relational}
+
+  EffortAndResolutionPath:
+    Type: AWS::BedrockAgentCore::Evaluator
+    Properties:
+      EvaluatorName: effort_and_resolution_path
+      Description: Doom loops, blocked offramps, lost handoff context
+      Level: SESSION
+      EvaluatorConfig:
+        CodeBased:
+          LambdaConfig: {LambdaArn: !Ref JudgeLambdaArn, LambdaTimeoutInSeconds: 300}
+      Tags: {suite: helpfulness-judges, tier: trajectory}
+
+  # --- the critical tier, sampled at 100% -----------------------------------
+  CriticalTier:
+    Type: AWS::BedrockAgentCore::OnlineEvaluationConfig
+    Properties:
+      OnlineEvaluationConfigName: helpfulness_judges_critical
+      Description: Bright-line judges on all sampled traffic
+      Rule:
+        SamplingConfig:
+          SamplingPercentage: 100          # superset of the directional cohort
+        SessionConfig:
+          SessionTimeoutMinutes: 30
+      DataSourceConfig:
+        CloudWatchLogs:
+          LogGroupNames: [!Ref SpanLogGroup]
+          ServiceNames: [!Ref ServiceName]
+      Evaluators:
+        - EvaluatorId: !Ref CapabilityHonesty
+        - EvaluatorId: !Ref NeedCoverage
+        - EvaluatorId: !Ref Actionability
+      EvaluationExecutionRoleArn: !Ref EvaluationExecutionRoleArn
+      EnableOnCreate: !If [StartEnabled, true, false]
+      Tags: {suite: helpfulness-judges, tier: critical}
+
+Outputs:
+  CriticalTierId:
+    Value: !Ref CriticalTier
+    Description: Results land in /aws/bedrock-agentcore/evaluations/results/<this-id>
+  EvaluatorIds:
+    Value: !Join [',', [!Ref EmpathicAttunement, !Ref NeedCoverage, !Ref Actionability,
+                        !Ref CapabilityHonesty, !Ref ConductAdaptation,
+                        !Ref EffortAndResolutionPath]]

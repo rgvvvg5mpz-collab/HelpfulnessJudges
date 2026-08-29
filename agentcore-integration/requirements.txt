@@ -1,0 +1,10 @@
+# Offline commands (list, check-drift, render, plan, verify) need only PyYAML.
+PyYAML>=6.0
+
+# Deploying and running. boto3 must be new enough to know AgentCore Evaluations —
+# `bedrock-agentcore-control` must expose CreateEvaluator. Verified on 1.43.83.
+boto3>=1.43.0 ; extra == "deploy"
+
+# The Lambda calls Anthropic directly, which is what preserves json_schema output,
+# effort:high and prompt caching. Bundle this in the deployment package.
+anthropic>=1.0.0 ; extra == "lambda"

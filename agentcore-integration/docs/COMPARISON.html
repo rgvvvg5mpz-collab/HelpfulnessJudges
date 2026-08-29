@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Hosting an LLM-Judge Suite: AgentCore vs Arize AX</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+@page { size: A4; margin: 18mm 16mm 20mm; }
+:root{--ink:#15191A;--soft:#3A4341;--muted:#6A7370;--rule:#D2D8D2;--rule-s:#E6EAE5;
+      --acc:#0B5D51;--acc-w:#EAF1EE;--warn:#8A5715;--warn-w:#FAF3E6;--fail:#8C2F2A;--fail-w:#FBEFED;
+      --f-d:"Spectral",Georgia,serif;--f-b:"IBM Plex Sans",sans-serif;--f-m:"IBM Plex Mono",monospace;}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--f-b);font-size:10.2pt;line-height:1.5;color:var(--ink);background:#fff}
+.wrap{max-width:190mm;margin:0 auto;padding:0 4mm}
+h1{font-family:var(--f-d);font-size:23pt;line-height:1.1;margin:0 0 6pt;letter-spacing:-.01em}
+.sub{font-family:var(--f-d);font-size:11.5pt;color:var(--soft);margin:0 0 10pt;line-height:1.4}
+.meta{font-family:var(--f-m);font-size:7.6pt;color:var(--muted);letter-spacing:.06em;
+      text-transform:uppercase;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);
+      padding:6pt 0;margin:0 0 16pt}
+h2{font-family:var(--f-d);font-size:14pt;margin:20pt 0 3pt;letter-spacing:-.01em;
+   break-after:avoid;page-break-after:avoid}
+h3{font-family:var(--f-b);font-size:10.4pt;font-weight:600;margin:13pt 0 3pt;break-after:avoid}
+.eyebrow{font-family:var(--f-m);font-size:7.4pt;letter-spacing:.12em;text-transform:uppercase;
+         color:var(--acc);margin:0 0 7pt}
+p{margin:0 0 7pt;color:var(--soft)}
+strong{color:var(--ink);font-weight:600}
+code{font-family:var(--f-m);font-size:8.6pt;background:#F1F4F1;padding:.5pt 2.5pt;border-radius:2px;color:var(--ink)}
+sup{font-size:7pt;color:var(--acc);font-weight:600}
+table{width:100%;border-collapse:collapse;margin:9pt 0 12pt;font-size:9pt;break-inside:avoid}
+th{font-family:var(--f-m);font-size:7.4pt;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+   text-align:left;font-weight:500;padding:5pt 6pt 4pt 0;border-bottom:1.2px solid var(--ink);vertical-align:bottom}
+td{padding:5.5pt 6pt 5.5pt 0;border-bottom:.6px solid var(--rule-s);vertical-align:top;color:var(--soft)}
+td:first-child{color:var(--ink);font-weight:500;width:22%}
+.win{color:var(--acc);font-weight:600}
+.lose{color:var(--fail);font-weight:600}
+.tie{color:var(--muted)}
+.box{border-left:2.5pt solid var(--acc);background:var(--acc-w);padding:7pt 10pt;margin:10pt 0;break-inside:avoid}
+.box.warn{border-left-color:var(--warn);background:var(--warn-w)}
+.box.fail{border-left-color:var(--fail);background:var(--fail-w)}
+.box p{color:var(--ink);font-size:9.4pt;margin:0}
+.box .lbl{font-family:var(--f-m);font-size:7.2pt;letter-spacing:.1em;text-transform:uppercase;
+          color:var(--acc);display:block;margin-bottom:3pt}
+.box.warn .lbl{color:var(--warn)} .box.fail .lbl{color:var(--fail)}
+ol.refs{font-size:8.4pt;padding-left:16pt;margin:6pt 0 0}
+ol.refs li{margin-bottom:4.5pt;color:var(--soft);line-height:1.4}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12pt;margin:9pt 0}
+.card{border-top:1.6pt solid var(--acc);padding-top:6pt;break-inside:avoid}
+.card.b{border-top-color:var(--fail)}
+.card h4{font-family:var(--f-b);font-size:9.4pt;font-weight:600;margin:0 0 3pt}
+.card p{font-size:8.8pt;margin:0}
+.verdict{border:1px solid var(--rule);padding:9pt 12pt;margin:12pt 0;break-inside:avoid}
+.verdict p{font-size:9.6pt}
+footer{margin-top:16pt;padding-top:6pt;border-top:1px solid var(--rule);
+       font-size:7.6pt;color:var(--muted);font-family:var(--f-m)}
+@media print{ a{color:inherit;text-decoration:none} }
+</style>
+</head>
+<body><div class="wrap">
+
+<h1>Hosting an LLM-Judge Suite</h1>
+<p class="sub">Amazon Bedrock AgentCore versus Arize AX, evaluated against a ten-judge helpfulness suite with structured verdicts, three-level scoring and k=5 aggregation.</p>
+<p class="meta">Technical comparison · v1.0 · Both integrations built and tested offline; neither has run against a live tenant</p>
+
+<p><strong>Summary.</strong> Both platforms can host the suite, and both collapse a rich verdict into three fields. AgentCore wins decisively on one axis that turns out to decide the rest: because a code-based evaluator is <em>your own Lambda</em>, the existing Anthropic pipeline runs unchanged — schema-enforced output, reasoning effort, prompt caching, and k=5 with a median all survive. Arize's equivalent path was disqualified because it has nowhere to put an API key.<sup>1</sup> That single asymmetry retires the fatal limitation of the Arize integration and inverts a verdict reached three weeks earlier on the same suite.</p>
+
+<div class="box">
+<span class="lbl">The one-line difference</span>
+<p>Arize hosts the <em>prompt</em>; AgentCore hosts the <em>process</em>. Hosting a prompt means accepting the host's model configuration, output shape and repetition policy. Hosting a process means accepting only its input and output contract — which is a far smaller surrender.</p>
+</div>
+
+<h2>1. What both platforms take away</h2>
+<p class="eyebrow">the shared compromise</p>
+<p>Neither platform will store a structured verdict. Arize's eval record is exactly <code>name, score, label, explanation</code><sup>2</sup>; an AgentCore code-based evaluator returns exactly <code>label, value, explanation</code><sup>3</sup>. In both cases the judges' six-to-seven binary checks, evidence spans, confidence and per-judge extras must be serialised into the one free-text field.</p>
+<p>Both integrations therefore use the same encoding — a compact JSON payload inside <code>explanation</code> — and both are, as far as published examples go, doing something neither vendor documents.</p>
+
+<h2>2. Feature comparison</h2>
+<p class="eyebrow">measured against the suite's actual requirements</p>
+
+<table>
+<thead><tr><th>Requirement</th><th>Arize AX</th><th>AgentCore</th><th>Consequence</th></tr></thead>
+<tbody>
+<tr><td>Structured verdict</td><td class="tie">3 fields</td><td class="tie">3 fields</td><td>Tie — both need payload-in-explanation</td></tr>
+<tr><td>Schema enforcement</td><td class="lose">None; model-authored string, validated only after the fact<sup>2</sup></td><td class="win">Full <code>json_schema</code> at generation time, because the Lambda calls Anthropic</td><td><strong>AgentCore.</strong> Arize cannot detect a judge emitting five checks instead of seven until you parse it</td></tr>
+<tr><td>Reasoning effort</td><td class="lose">Unreachable. <code>InvocationParamsRequest</code> has Gemini and OpenAI controls, none for Anthropic<sup>4</sup></td><td class="win">Native — you build the request</td><td><strong>AgentCore.</strong> This was graded <em>fatal</em> for Arize; the suite runs at <code>effort: high</code></td></tr>
+<tr><td>k=5 + median</td><td class="lose">No repetition primitive; duplicates rejected, re-runs replace<sup>5</sup></td><td class="win">Inside the Lambda, with spread and review-routing preserved</td><td><strong>AgentCore.</strong> Arize loses <code>unanimous</code>, <code>hard_failure_votes</code> and boundary-split routing</td></tr>
+<tr><td>Prompt caching</td><td class="lose">No <code>cache_control</code> surface; it is a message-block annotation and the host builds the messages</td><td class="win">Preserved. k=5 repeats an identical prefix five times</td><td><strong>AgentCore.</strong> Ten judges share one 132-line preamble</td></tr>
+<tr><td>Three-level scale</td><td class="win"><code>classification_choices</code> takes an arbitrary label→score map<sup>6</sup></td><td class="win"><code>ratingScale.numerical</code>, up to 20 definitions<sup>7</sup></td><td>Tie — both express 0 / 0.5 / 1.0 natively</td></tr>
+<tr><td>Turn judge sees whole conversation</td><td class="tie">Via a pre-rendered span attribute you write</td><td class="tie">Native at TRACE level<sup>8</sup>, but the Lambda re-renders anyway</td><td>Tie in practice — both need instrumentation</td></tr>
+<tr><td>Tool-call reach</td><td class="lose">Span scope cannot read sibling TOOL spans; subquery mapping is UI-only</td><td class="win">Raw <code>sessionSpans</code> delivered to the Lambda</td><td><strong>AgentCore.</strong> Two-directional trace reconciliation is only possible here</td></tr>
+<tr><td>Declarative config</td><td class="lose">None. No Terraform provider, no <code>apply -f</code></td><td class="win">CloudFormation, Terraform and CDK resource types<sup>9</sup></td><td><strong>AgentCore.</strong> Arize needs a reconcile script you own</td></tr>
+<tr><td>Query the check vector</td><td class="lose">Filters are equality/comparison only; export required</td><td class="win">Logs Insights has <code>parse</code> and regex</td><td><strong>AgentCore</strong>, pending empirical confirmation</td></tr>
+<tr><td>Secrets for a custom judge</td><td class="lose">No secret store; key would be plaintext and permanently versioned<sup>1</sup></td><td class="win">Lambda execution role + Secrets Manager</td><td><strong>AgentCore.</strong> This is the root cause of most rows above</td></tr>
+<tr><td>Execution ceiling</td><td class="win">Host-managed; no user-visible timeout</td><td class="lose">Lambda 300 s max; 6 MB input cap<sup>10</sup></td><td><strong>Arize.</strong> k=5 concurrent Opus calls must fit — the top sizing risk</td></tr>
+<tr><td>Batch API discount</td><td class="lose">Not on the hosted path</td><td class="lose">Not on the online path</td><td>Tie — both keep it for offline anchor runs</td></tr>
+<tr><td>Setup burden</td><td class="win">Instrument one attribute per span</td><td class="lose">Account-wide Transaction Search, conforming OTel spans, two IAM roles</td><td><strong>Arize.</strong> AgentCore's prerequisite is plausibly the larger half of the work</td></tr>
+<tr><td>Evaluator cap</td><td class="win">No documented per-task cap</td><td class="lose">10 per online config, non-adjustable</td><td><strong>Arize.</strong> The suite fits with zero headroom</td></tr>
+<tr><td>Rubric edits</td><td class="win">New version, task keeps running</td><td class="lose">Evaluator locked while its config is ENABLED</td><td><strong>Arize.</strong> AgentCore needs pause → update → resume</td></tr>
+</tbody>
+</table>
+
+<div class="box fail">
+<span class="lbl">The correction worth recording</span>
+<p>The Arize integration graded Anthropic reasoning-effort as <strong>fatal</strong> — the suite runs every judge at <code>effort: high</code>, and Arize's schema exposes reasoning controls for Gemini and OpenAI but none for Anthropic.<sup>4</sup> The AgentCore design retires that limitation entirely, not by finding a setting, but by moving the model call out of the host. Any comparison that scores only "does the platform have an eval feature" misses this.</p>
+</div>
+
+<h2>3. Where each platform is genuinely better</h2>
+<p class="eyebrow">honest pros and cons</p>
+<div class="two">
+<div class="card"><h4>AgentCore is better at</h4>
+<p><strong>Fidelity.</strong> Everything the suite depends on survives: schema, effort, caching, k=5, tool reach.<br><br>
+<strong>Automation.</strong> Real IaC resource types rather than a bespoke reconcile script.<br><br>
+<strong>Queryability.</strong> Logs Insights can parse the payload; Arize filters cannot.<br><br>
+<strong>Secrets.</strong> An execution role instead of a plaintext key.</p></div>
+<div class="card b"><h4>Arize is better at</h4>
+<p><strong>Time to first score.</strong> No account-wide prerequisite, no Lambda, no IAM.<br><br>
+<strong>Operational simplicity.</strong> No 300-second ceiling, no 6 MB input cap, no evaluator lock.<br><br>
+<strong>Headroom.</strong> No 10-evaluator cap to design around.<br><br>
+<strong>Purpose-built UI.</strong> Eval-first product rather than an observability console.</p></div>
+</div>
+
+<div class="box warn">
+<span class="lbl">The trade stated plainly</span>
+<p>AgentCore buys fidelity with operational complexity. If the chatbot already runs on AgentCore and emits conforming spans, that complexity is mostly already paid and AgentCore is the clear choice. If it does not, Arize reaches a first score materially sooner — at the cost of the reasoning effort the suite was validated with, which means the numbers are not comparable to the anchor set.</p>
+</div>
+
+<h2>4. Recommendation</h2>
+<p class="eyebrow">and the condition that would change it</p>
+<div class="verdict">
+<p><strong>Run the suite on AgentCore</strong> if the chatbot is on AgentCore or its traces already reach CloudWatch as conforming OTel spans. The code-based Lambda path preserves the judges as validated; no other hosted option does.</p>
+<p><strong>Keep Arize</strong> if it is already the observability system of record, and accept that its judges are a lower-fidelity sentinel — a shallow pass/warn/fail on sampled traffic, not a substitute for the validated suite.</p>
+<p><strong>Running both is defensible</strong> and cheaper than it looks, since the rubrics are byte-identical across the two integrations and only the tail differs. What is not defensible is averaging their scores: they are different instruments.</p>
+</div>
+
+<h3>What would change this recommendation</h3>
+<p>Three empirical results, none yet obtained. <strong>One</strong> — if k=5 at <code>effort: high</code> does not fit inside 300 seconds, AgentCore's advantage narrows to k=3 and the gap closes. <strong>Two</strong> — if a ~1.5 KB JSON payload does not survive AgentCore's <code>explanation</code> field intact, both platforms lose the check vector and the comparison becomes about cost and operations alone. <strong>Three</strong> — if Arize adds an Anthropic reasoning parameter, its fatal limitation becomes minor and its simplicity advantage starts to dominate.</p>
+
+<h2>5. Method and limitations</h2>
+<p class="eyebrow">what this comparison is and is not</p>
+<p>API claims were verified by reading shipped client libraries rather than documentation: the Arize <code>8.50.0</code> wheel (model fields, enums, regexes, constants) and botocore <code>1.43.83</code> service models for <code>bedrock-agentcore-control</code>. In both cases the published docs disagreed with the shipped code in at least one material place.</p>
+<p><strong>Neither integration has been run against a live tenant.</strong> Prompt assembly, schema derivation, span reconstruction, payload validation and request validation are tested offline — 49 checks for Arize, 51 for AgentCore. No judge has scored a production trace on either platform. Cost figures are not included because neither has been measured; the token bill will dominate either platform's own fee at the suite's volume, and that comparison should be made with real traffic.</p>
+
+<h2>References</h2>
+<ol class="refs">
+<li>Arize <code>CustomCodeConfigRequest</code> exposes <code>[data_granularity, query_filter, type, name, code, imports, variables, static_params]</code> — no <code>llm_config</code>, no secret store. Verified against the <code>arize</code> 8.50.0 wheel.</li>
+<li>Arize <code>Evaluation.__properties = ["name", "score", "label", "explanation"]</code>; <code>EVAL_EXPLANATION_MAX_STR_LENGTH = 10_000</code>. Verified against <code>arize/_generated/api_client/models/evaluation.py</code> and <code>arize/constants/spans.py</code>, 8.50.0.</li>
+<li>AgentCore code-based evaluators return <code>label</code> (required), <code>value</code>, <code>explanation</code>. AWS Bedrock AgentCore Developer Guide, Evaluations.</li>
+<li>Arize <code>InvocationParamsRequest</code>: <code>thinking_level</code> (Gemini 3.x), <code>thinking_budget</code> (Gemini 2.5), <code>reasoning_effort</code> (OpenAI o-series/GPT-5). No Anthropic equivalent. Verified against the 8.50.0 wheel.</li>
+<li>Arize <code>TaskEvaluatorInput.evaluator_id</code>: "Duplicates are not allowed"; <code>override_evaluations</code> replaces rather than appends. Verified against the 8.50.0 wheel.</li>
+<li>Arize <code>TemplateConfigInput.classification_choices: Dict[str, float]</code>. Verified against the 8.50.0 wheel.</li>
+<li>AgentCore <code>RatingScale</code> union — <code>numerical</code> (label, value, definition) or <code>categorical</code>; max 20 definitions. AWS Bedrock AgentCore Developer Guide.</li>
+<li>AgentCore <code>CreateEvaluator.level</code> enum <code>[TOOL_CALL, TRACE, SESSION]</code>; trace-level <code>{context}</code> carries all prior turns. Verified against botocore 1.43.83 service model.</li>
+<li><code>AWS::BedrockAgentCore::Evaluator</code> and <code>AWS::BedrockAgentCore::OnlineEvaluationConfig</code> CloudFormation types, with <code>hashicorp/aws</code> Terraform and CDK equivalents.</li>
+<li>AgentCore <code>lambdaConfig.lambdaTimeoutInSeconds</code> bounds <code>min=1, max=300</code>. Verified against botocore 1.43.83 service model.</li>
+<li>Zheng, L. et al. "Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena." NeurIPS 2023 D&amp;B. arXiv:2306.05685. — Full conversation in one prompt; judges mis-locate prior turns otherwise.</li>
+<li>Lee, Y. et al. "CheckEval: A reliable LLM-as-a-Judge framework using checklists." EMNLP 2025. arXiv:2403.18771. — +0.45 cross-evaluator agreement from binary decomposition; the reason the check vector matters enough to preserve.</li>
+<li>"The Coin Flip Judge? Reliability and Bias in LLM-as-a-Judge Evaluation." arXiv:2606.13685. — 13.6% verdict flip rate on repeated identical input; the reason k=5 is not optional.</li>
+<li>Kim, S. et al. "Prometheus: Inducing Fine-grained Evaluation Capability in Language Models." ICLR 2024. arXiv:2310.08491. — Rubric contract; Pearson 0.897 with human evaluators.</li>
+</ol>
+
+<footer>Generated from arize-integration/ and agentcore-integration/. Both suites: proposed, not validated.</footer>
+</div></body></html>

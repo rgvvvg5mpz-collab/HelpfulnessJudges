@@ -1,0 +1,20 @@
+{
+  "source": "../judges",
+  "vendored_at_utc": "2026-08-29",
+  "files": {
+    "_preamble.md": "847b30e848674065",
+    "_scoring-tail.md": "b58ebb7893ee4244",
+    "actionability.md": "2d41c72d8a9621ee",
+    "calibrated-hedging.md": "8e0b427af4ae238c",
+    "capability-honesty-traced.md": "f5b9ba1b79691435",
+    "capability-honesty.md": "88f99ca1555e2e39",
+    "conduct-adaptation.md": "ca618c3d866da445",
+    "effort-and-resolution-path.md": "950b8922aae3829e",
+    "emotional-accuracy.md": "fed5af7efb452609",
+    "empathic-attunement.md": "fccb0660e5c8f68d",
+    "need-coverage.md": "0064d537a22676a9",
+    "plain-language-clarity.md": "621325fadca57627",
+    "signal-density.md": "a746f29afc3889b7"
+  },
+  "note": "Vendored copies, ALL UNCHANGED \u2014 including _scoring-tail.md. On the code-based (Lambda) path the handler calls Anthropic itself with output_config.format json_schema, so the original output contract holds verbatim and the verdict is schema-validated at generation time. The collapse to {label,value,explanation} happens at the AgentCore return boundary, after validation. Contrast ../arize-integration, which had to rewrite the tail. `agentcore-judges check-drift` re-hashes ../judges and fails on divergence."
+}
