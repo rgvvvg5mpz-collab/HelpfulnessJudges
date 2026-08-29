@@ -293,6 +293,9 @@ const BASE = JUDGES.filter(j => !j.variant_of);
 const $ = s => document.querySelector(s);
 const el = (tag, cls, html) => { const n = document.createElement(tag);
   if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; };
+// Hyphens and punctuation otherwise split terms a reader types as words:
+// "doom loop" must find "doom-loop", "401k" must find "401(k)".
+const norm = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const LV = { 1: ["1.0", "PASS", "l1", "lv-pass"], 0.5: ["0.5", "WARNING", "l05", "lv-warn"],
              0: ["0", "HARD FAILURE", "l0", "lv-fail"] };
@@ -373,15 +376,16 @@ function paintFilters() {
   seg($("#f-tier"), TIERS, () => filt.tier, v => { filt.tier = v; paintFilters(); renderJudges(); }, cap);
   seg($("#f-unit"), UNITS, () => filt.unit, v => { filt.unit = v; paintFilters(); renderJudges(); }, cap);
 }
-$("#q").addEventListener("input", e => { filt.q = e.target.value.toLowerCase().trim(); renderJudges(); });
+$("#q").addEventListener("input", e => { filt.q = e.target.value; renderJudges(); });
 
 function matches(j) {
   if (filt.tier !== "all" && j.tier !== filt.tier) return false;
   if (filt.unit !== "all" && j.unit !== filt.unit) return false;
-  if (!filt.q) return true;
-  const hay = [j.id, j.name, j.tier, j.unit, j.trigger, j.blurb,
-    ...j.checks.map(c => c.q), ...j.bright_lines].join(" ").toLowerCase();
-  return hay.includes(filt.q);
+  const q = norm(filt.q);
+  if (!q) return true;
+  const hay = norm([j.id, j.name, j.tier, j.unit, j.trigger, j.blurb,
+    ...j.checks.map(c => c.q), ...j.bright_lines].join(" "));
+  return q.split(" ").every(term => hay.includes(term));
 }
 
 /* ---------------------------------------------------------- judge cards */
@@ -395,7 +399,7 @@ function renderJudges() {
   const host = $("#judges"); host.textContent = "";
   const shown = JUDGES.filter(matches);
   $("#suite-count").textContent =
-    `${shown.length} of ${JUDGES.length} shown` + (filt.q ? ` · “${filt.q}”` : "");
+    `${shown.length} of ${JUDGES.length} shown` + (filt.q.trim() ? ` · “${filt.q.trim()}”` : "");
   if (!shown.length) { host.append(el("div", "empty", "No judge matches those filters.")); return; }
 
   shown.forEach(j => {
@@ -693,7 +697,7 @@ const bSel = $("#b-judge");
 bSel.append(new Option("All judges", "all"));
 JUDGES.forEach(j => bSel.append(new Option(j.id, j.id)));
 bSel.addEventListener("change", () => { br.judge = bSel.value; br.page = 0; renderBrowse(); });
-$("#b-q").addEventListener("input", e => { br.q = e.target.value.toLowerCase().trim(); br.page = 0; renderBrowse(); });
+$("#b-q").addEventListener("input", e => { br.q = e.target.value; br.page = 0; renderBrowse(); });
 $("#b-contested").addEventListener("click", e => {
   br.contested = !br.contested; br.page = 0;
   e.currentTarget.setAttribute("aria-pressed", String(br.contested));
@@ -713,9 +717,10 @@ function browseRows() {
     if (br.judge !== "all" && s.judge !== br.judge) return false;
     if (br.level !== "all" && lvKey(s.s) !== parseFloat(br.level)) return false;
     if (br.contested && !s.c) return false;
-    if (br.q) {
-      const hay = (s.sc + " " + s.id + " " + s.why + " " + s.t.map(t => t.x).join(" ")).toLowerCase();
-      if (!hay.includes(br.q)) return false;
+    const q = norm(br.q);
+    if (q) {
+      const hay = norm(s.sc + " " + s.id + " " + s.why + " " + s.t.map(t => t.x).join(" "));
+      if (!q.split(" ").every(term => hay.includes(term))) return false;
     }
     return true;
   });
