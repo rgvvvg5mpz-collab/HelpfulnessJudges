@@ -1,0 +1,10 @@
+# python
+.venv/
+__pycache__/
+*.py[cod]
+
+# judge run output — regenerate with harness.run_judges
+runs/
+
+# os
+.DS_Store
