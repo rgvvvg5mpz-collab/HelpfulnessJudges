@@ -111,6 +111,7 @@ svg{display:block;width:100%;height:auto}
 .imp{border-top:2px solid var(--accent);padding-top:.6rem}
 .imp h3{font-family:var(--f-b);font-size:.9rem;font-weight:600;margin:0 0 .3rem;color:var(--ink)}
 .imp p{font-size:.85rem;color:var(--ink-soft);margin:0 0 .5rem}
+.illus{display:inline-block;font:400 9.5px var(--f-m);letter-spacing:.06em;text-transform:uppercase;color:var(--warn);border:1px solid var(--warn);background:var(--warn-wash);padding:.12em .4em;border-radius:2px;vertical-align:middle;margin-left:.45rem}
 .imp p.punch{margin:.5rem 0 0;font-size:.82rem;color:var(--ink);border-top:1px solid var(--rule);padding-top:.45rem}
 .imp p.punch b{font-family:var(--f-m);font-weight:400;color:var(--muted)}
 .imp p.punch em{font-style:normal;color:var(--accent-ink);font-weight:600}
@@ -130,7 +131,7 @@ footer{margin-top:1.1rem;padding-top:.7rem;border-top:1px solid var(--rule);
   <div>
     <p class="eyebrow">Vanguard &middot; customer assistant</p>
     <h1>Reads fine. Measurably isn&rsquo;t.</h1>
-    <p class="lede">Ten independent judges score every assistant turn &mdash; one dimension each &mdash; so &ldquo;was that a good answer?&rdquo; stops being an opinion.</p>
+    <p class="lede">Ten independent judges, one dimension each, built to score every assistant turn &mdash; so &ldquo;was that a good answer?&rdquo; stops being an opinion.</p>
   </div>
   <span class="chip">Proposed &middot; not yet validated</span>
 </div>
@@ -187,7 +188,7 @@ footer{margin-top:1.1rem;padding-top:.7rem;border-top:1px solid var(--rule);
   </div>
 
   <div class="panel">
-    <p class="ph"><b>What the ten judges see</b> <span>3 bright lines</span></p>
+    <p class="ph"><b>What the ten judges would see</b> <span>3 bright lines</span><span class="illus">worked example &middot; not measured</span></p>
     <div class="row bl"><span class="n"><i class="dot d0"></i>empathic-attunement</span><span class="v">0</span><span class="c">warmth, no sign of listening</span></div>
     <div class="row bl"><span class="n"><i class="dot d0"></i>capability-honesty</span><span class="v">0</span><span class="c">claims an account lookup</span></div>
     <div class="row bl"><span class="n"><i class="dot d0"></i>&nbsp;&nbsp;&#8627; vs tool trace</span><span class="v">0</span><span class="c">no such call was made</span></div>
@@ -212,7 +213,7 @@ footer{margin-top:1.1rem;padding-top:.7rem;border-top:1px solid var(--rule);
 <div class="three">
 
   <div class="imp">
-    <h3>A number, not an opinion</h3>
+    <h3>A number, not an opinion<span class="illus">illustrative</span></h3>
     <p>Comparable across releases, and across assistants.</p>
     <svg viewBox="0 0 300 62" role="img" aria-label="A helpfulness score plotted across successive releases, rising and dipping rather than sitting as a single opinion.">
       <path class="ln" d="M4 58 H296" stroke-dasharray="2 4"/>
@@ -224,7 +225,7 @@ footer{margin-top:1.1rem;padding-top:.7rem;border-top:1px solid var(--rule);
   </div>
 
   <div class="imp">
-    <h3>Regression you can attribute</h3>
+    <h3>Regression you can attribute<span class="illus">illustrative</span></h3>
     <p>Change a prompt, see <em>which</em> dimension moved.</p>
     <svg viewBox="0 0 300 62" role="img" aria-label="Ten bars showing per-dimension change after a prompt edit; nine are flat and one has dropped, labelled as empathy down.">
       <path class="ln" d="M4 30 H230" stroke-dasharray="2 4"/>
@@ -246,7 +247,8 @@ footer{margin-top:1.1rem;padding-top:.7rem;border-top:1px solid var(--rule);
 
   <div class="imp">
     <h3>Portable, and auditable</h3>
-    <p>Prompts, not infrastructure. One source, three platforms.</p>
+    <p>Prompts, not infrastructure. One source, three platforms &mdash; different
+    instruments, not one at three quality levels.</p>
     <svg viewBox="0 0 300 62" role="img" aria-label="One rubric source of truth feeding three deployment platforms: AgentCore Lambda, Arize AX, and AgentCore native.">
       <rect class="bx-a" x="1" y="18" width="92" height="26" rx="2"/>
       <text class="t-l" x="47" y="35" text-anchor="middle">rubrics</text>
