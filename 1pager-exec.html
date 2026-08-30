@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Helpfulness Judges — Executive Summary</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#F2F4F1;--surface:#FBFCFA;--surface-alt:#E9ECE7;
+  --ink:#15191A;--ink-soft:#3A4341;--muted:#6A7370;
+  --rule:#D2D8D2;--rule-soft:#E2E6E0;
+  --accent:#0B5D51;--accent-ink:#084A41;--accent-wash:#DCE8E4;
+  --warn:#8A5715;--warn-wash:#F2E7D4;
+  --fail:#8C2F2A;--fail-wash:#F3DEDC;
+  --f-d:"Spectral",Georgia,serif;
+  --f-b:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,sans-serif;
+  --f-m:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0E1211;--surface:#161B19;--surface-alt:#1D2422;
+  --ink:#E7EBE7;--ink-soft:#BDC5C1;--muted:#8B9591;
+  --rule:#2B3431;--rule-soft:#222A28;
+  --accent:#63C3B0;--accent-ink:#8AD6C5;--accent-wash:#172A27;
+  --warn:#D9A75C;--warn-wash:#2A2317;
+  --fail:#E0857E;--fail-wash:#2B1A19;
+}}
+:root[data-theme="dark"]{
+  --ground:#0E1211;--surface:#161B19;--surface-alt:#1D2422;
+  --ink:#E7EBE7;--ink-soft:#BDC5C1;--muted:#8B9591;
+  --rule:#2B3431;--rule-soft:#222A28;
+  --accent:#63C3B0;--accent-ink:#8AD6C5;--accent-wash:#172A27;
+  --warn:#D9A75C;--warn-wash:#2A2317;
+  --fail:#E0857E;--fail-wash:#2B1A19;
+}
+*{box-sizing:border-box}
+html,body{max-width:100%;overflow-x:hidden}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--f-b);
+     font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:clamp(1.6rem,3.5vw,2.6rem) clamp(1rem,3.5vw,2.4rem) 2.4rem}
+p{margin:0}
+.eyebrow{font-family:var(--f-m);font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;
+         color:var(--muted);margin:0 0 .55rem}
+h1{font-family:var(--f-d);font-weight:600;font-size:clamp(1.9rem,4vw,2.7rem);line-height:1;
+   letter-spacing:-.02em;margin:0 0 .5rem}
+.lede{font-family:var(--f-d);font-size:1.05rem;color:var(--ink-soft);max-width:52ch;margin:0}
+.head{display:grid;gap:.9rem;align-items:end;border-bottom:1px solid var(--rule);padding-bottom:1.1rem}
+@media(min-width:900px){.head{grid-template-columns:1fr auto}}
+.chip{display:inline-block;font-family:var(--f-m);font-size:.66rem;letter-spacing:.06em;
+      padding:.3em .6em;border-radius:2px;border:1px solid var(--warn);color:var(--warn);
+      background:var(--warn-wash);white-space:nowrap}
+h2{font-family:var(--f-m);font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;
+   color:var(--accent-ink);font-weight:500;margin:1.7rem 0 .5rem}
+h2 span{color:var(--muted)}
+.say{font-family:var(--f-d);font-size:1.02rem;color:var(--ink);margin:0 0 .7rem;max-width:70ch}
+svg{display:block;width:100%;height:auto}
+.t-l{font:500 11px var(--f-m);fill:var(--ink)}
+.t-s{font:10px var(--f-b);fill:var(--muted)}
+.t-a{font:500 10px var(--f-m);fill:var(--accent)}
+.t-f{font:500 10px var(--f-m);fill:var(--fail)}
+.bx{fill:var(--surface);stroke:var(--rule);stroke-width:1}
+.bx-a{fill:var(--accent-wash);stroke:var(--accent);stroke-width:1}
+.bx-f{fill:var(--fail-wash);stroke:var(--fail);stroke-width:1;stroke-dasharray:4 3}
+.ln{stroke:var(--rule);stroke-width:1.3;fill:none}
+.ln-a{stroke:var(--accent);stroke-width:1.6;fill:none}
+.ln-f{stroke:var(--fail);stroke-width:1.6;fill:none}
+.tags{display:flex;flex-wrap:wrap;gap:.4rem;margin:.7rem 0 0}
+.tag{font-family:var(--f-m);font-size:.72rem;color:var(--ink-soft);background:var(--surface);
+     border:1px solid var(--rule);border-left:2px solid var(--fail);padding:.28rem .55rem}
+.two{display:grid;gap:1rem;margin-top:.9rem;align-items:start}
+@media(min-width:900px){.two{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr)}}
+.panel{background:var(--surface);border:1px solid var(--rule);padding:.85rem .95rem}
+.ph{font-family:var(--f-m);font-size:.65rem;letter-spacing:.11em;text-transform:uppercase;
+    color:var(--muted);margin:0 0 .55rem;display:flex;justify-content:space-between;gap:.6rem}
+.ph b{font-weight:500;color:var(--ink)}
+.turn{margin:0 0 .6rem}
+.who{font-family:var(--f-m);font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.turn p{font-size:.92rem;color:var(--ink-soft);margin:.1rem 0 0}
+.turn.cust p{color:var(--ink)}
+.verdict{font-size:.85rem;color:var(--muted);border-top:1px dotted var(--rule);padding-top:.55rem;margin-top:.2rem}
+.row{display:grid;grid-template-columns:auto 2.1rem minmax(0,1fr);gap:.55rem;align-items:baseline;
+     padding:.24rem .35rem;border-bottom:1px solid var(--rule-soft)}
+.row:last-child{border-bottom:0}
+.row .n{font-family:var(--f-m);font-size:.78rem;color:var(--ink);white-space:nowrap;
+        overflow:hidden;text-overflow:ellipsis}
+.row .v{font-family:var(--f-m);font-size:.74rem;text-align:right;color:var(--muted)}
+.row .c{font-size:.78rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dot{width:.6rem;height:.6rem;display:inline-block;border:1px solid;border-radius:50%;
+     margin-right:.3rem;vertical-align:-1px}
+.d1{background:var(--accent);border-color:var(--accent)}
+.d5{background:linear-gradient(90deg,var(--warn) 0 50%,transparent 50% 100%);border-color:var(--warn)}
+.d0{background:var(--fail);border-color:var(--fail);border-radius:1px}
+.dc{background:transparent;border-color:var(--muted);border-style:dashed}
+.row.bl{background:var(--fail-wash);box-shadow:inset 2px 0 0 var(--fail)}
+.row.bl .n,.row.bl .v,.row.bl .c{color:var(--fail)}
+.row.bl .v{font-weight:500}
+.scale{display:flex;flex-wrap:wrap;gap:.35rem .9rem;font-family:var(--f-m);font-size:.68rem;
+       color:var(--muted);margin-top:.6rem;padding-top:.5rem;border-top:1px dotted var(--rule)}
+.brief{font-family:var(--f-d);font-size:.95rem;color:var(--ink);margin:.8rem 0 0}
+.brief strong{font-weight:600}
+.figx{overflow-x:auto}
+@media(max-width:899px){
+  .figx svg{min-width:600px}
+  .row{grid-template-columns:minmax(0,1fr) auto}
+  .row .n{grid-column:1}
+  .row .v{grid-column:2}
+  .row .c{grid-column:1/-1;white-space:normal;font-size:.76rem;padding-left:.9rem;line-height:1.35}
+}
+.three{display:grid;gap:1rem;margin-top:.7rem}
+@media(min-width:760px){.three{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.imp{border-top:2px solid var(--accent);padding-top:.6rem}
+.imp h3{font-family:var(--f-b);font-size:.9rem;font-weight:600;margin:0 0 .3rem;color:var(--ink)}
+.imp p{font-size:.85rem;color:var(--ink-soft);margin:0 0 .5rem}
+.imp p.punch{margin:.5rem 0 0;font-size:.82rem;color:var(--ink);border-top:1px solid var(--rule);padding-top:.45rem}
+.imp p.punch b{font-family:var(--f-m);font-weight:400;color:var(--muted)}
+.imp p.punch em{font-style:normal;color:var(--accent-ink);font-weight:600}
+.status{margin-top:1.5rem;border:1px solid var(--warn);background:var(--warn-wash);padding:.8rem 1rem}
+.status .lbl{font-family:var(--f-m);font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;
+             color:var(--warn);margin:0 0 .3rem}
+.status p{font-size:.87rem;color:var(--ink);margin:0}
+footer{margin-top:1.1rem;padding-top:.7rem;border-top:1px solid var(--rule);
+        font-family:var(--f-m);font-size:.7rem;color:var(--muted);
+        display:flex;flex-wrap:wrap;gap:.4rem 1.4rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="head">
+  <div>
+    <p class="eyebrow">Vanguard &middot; customer assistant</p>
+    <h1>Reads fine. Measurably isn&rsquo;t.</h1>
+    <p class="lede">Ten independent judges score every assistant turn &mdash; one dimension each &mdash; so &ldquo;was that a good answer?&rdquo; stops being an opinion.</p>
+  </div>
+  <span class="chip">Proposed &middot; not yet validated</span>
+</div>
+
+<h2><span>01 /</span> The problem</h2>
+<p class="say">Our assistants answer questions about people&rsquo;s money at the worst moments of their lives &mdash; job loss, a market drop, a death in the family.</p>
+
+<div class="figx">
+<svg viewBox="0 0 960 96" role="img" aria-label="An assistant reply passes an automated correctness check today, then reaches a helpfulness check that has no instrument behind it, only spot checks and opinion.">
+  <rect class="bx" x="1" y="26" width="150" height="44" rx="2"/>
+  <text class="t-l" x="76" y="45" text-anchor="middle">Assistant reply</text>
+  <path class="ln" d="M155 48 H222"/><path class="ln" d="M214 43 l8 5 -8 5"/>
+  <rect class="bx-a" x="226" y="26" width="192" height="44" rx="2"/>
+  <text class="t-l" x="322" y="45" text-anchor="middle">Was it correct?</text>
+  <text class="t-a" x="322" y="60" text-anchor="middle">MEASURED TODAY</text>
+  <path class="ln" d="M422 48 H489"/><path class="ln" d="M481 43 l8 5 -8 5"/>
+  <rect class="bx-f" x="493" y="26" width="192" height="44" rx="2"/>
+  <text class="t-l" x="589" y="45" text-anchor="middle">Was it helpful?</text>
+  <text class="t-f" x="589" y="60" text-anchor="middle">NO INSTRUMENT</text>
+  <path class="ln-f" d="M689 48 H752" stroke-dasharray="4 3"/>
+  <text class="t-s" x="760" y="41">Spot checks. One reviewer&rsquo;s opinion.</text>
+  <text class="t-s" x="760" y="56">Blind to last week&rsquo;s change.</text>
+</svg>
+</div>
+
+<p class="say" style="margin-top:.7rem">The failures that matter aren&rsquo;t factual errors.</p>
+<div class="tags">
+  <span class="tag">warm without listening</span>
+  <span class="tag">answers the wrong question</span>
+  <span class="tag">answer buried in filler</span>
+  <span class="tag">hedges on everything</span>
+  <span class="tag">claims work it never did</span>
+</div>
+
+<h2><span>02 /</span> The solution &mdash; one turn, ten scores</h2>
+<p class="say">Not one &ldquo;helpfulness&rdquo; score &mdash; a single number hides which thing broke. Every judge scores every turn; none can suppress another.</p>
+
+<div class="two">
+
+  <div>
+  <div class="panel">
+    <p class="ph"><b>What a reviewer sees</b> <span>reads fine</span></p>
+    <div class="turn cust">
+      <span class="who">Customer</span>
+      <p>&ldquo;I got laid off Friday. What happens to my 401(k)?&rdquo;</p>
+    </div>
+    <div class="turn">
+      <span class="who">Assistant</span>
+      <p>&ldquo;I&rsquo;m so sorry &mdash; that sounds really stressful. Generally you have a few options: leave it, roll it over, or withdraw, though penalties may apply. I&rsquo;ve pulled up your account for you.&rdquo;</p>
+    </div>
+    <p class="verdict">Warm. Accurate. Signed off in a skim.</p>
+  </div>
+  <p class="brief"><strong>Bright lines</strong> force a zero regardless of everything else. 660 labelled samples test the judges.</p>
+  </div>
+
+  <div class="panel">
+    <p class="ph"><b>What the ten judges see</b> <span>3 bright lines</span></p>
+    <div class="row bl"><span class="n"><i class="dot d0"></i>empathic-attunement</span><span class="v">0</span><span class="c">warmth, no sign of listening</span></div>
+    <div class="row bl"><span class="n"><i class="dot d0"></i>capability-honesty</span><span class="v">0</span><span class="c">claims an account lookup</span></div>
+    <div class="row bl"><span class="n"><i class="dot d0"></i>&nbsp;&nbsp;&#8627; vs tool trace</span><span class="v">0</span><span class="c">no such call was made</span></div>
+    <div class="row"><span class="n"><i class="dot d5"></i>emotional-accuracy</span><span class="v">0.5</span><span class="c">reads stress, misses urgency</span></div>
+    <div class="row"><span class="n"><i class="dot d5"></i>need-coverage</span><span class="v">0.5</span><span class="c">the money-now question untouched</span></div>
+    <div class="row"><span class="n"><i class="dot d5"></i>signal-density</span><span class="v">0.5</span><span class="c">a third is preamble</span></div>
+    <div class="row"><span class="n"><i class="dot d5"></i>calibrated-hedging</span><span class="v">0.5</span><span class="c">&ldquo;generally&rdquo;, &ldquo;may&rdquo; &mdash; hedged flat</span></div>
+    <div class="row"><span class="n"><i class="dot d1"></i>plain-language-clarity</span><span class="v">1.0</span><span class="c">a first-timer could follow it</span></div>
+    <div class="row"><span class="n"><i class="dot dc"></i>conduct-adaptation</span><span class="v">conv</span><span class="c">scored across turns</span></div>
+    <div class="row"><span class="n"><i class="dot dc"></i>effort-and-resolution</span><span class="v">conv</span><span class="c">scored across turns</span></div>
+    <div class="scale">
+      <span><i class="dot d0"></i>0 fail</span>
+      <span><i class="dot d5"></i>0.5 warning</span>
+      <span><i class="dot d1"></i>1.0 pass</span>
+      <span><i class="dot dc"></i>8 turn &middot; 2 conversation</span>
+    </div>
+  </div>
+
+</div>
+
+<h2><span>03 /</span> The impact</h2>
+<div class="three">
+
+  <div class="imp">
+    <h3>A number, not an opinion</h3>
+    <p>Comparable across releases, and across assistants.</p>
+    <svg viewBox="0 0 300 62" role="img" aria-label="A helpfulness score plotted across successive releases, rising and dipping rather than sitting as a single opinion.">
+      <path class="ln" d="M4 58 H296" stroke-dasharray="2 4"/>
+      <polyline class="ln-a" points="12,48 60,42 108,46 156,28 204,34 252,20 288,24"/>
+      <circle cx="288" cy="24" r="3.2" fill="var(--accent)"/>
+      <text class="t-s" x="4" y="12">score</text>
+      <text class="t-s" x="296" y="12" text-anchor="end">release &rarr;</text>
+    </svg>
+  </div>
+
+  <div class="imp">
+    <h3>Regression you can attribute</h3>
+    <p>Change a prompt, see <em>which</em> dimension moved.</p>
+    <svg viewBox="0 0 300 62" role="img" aria-label="Ten bars showing per-dimension change after a prompt edit; nine are flat and one has dropped, labelled as empathy down.">
+      <path class="ln" d="M4 30 H230" stroke-dasharray="2 4"/>
+      <g fill="var(--accent)">
+        <rect x="10" y="24" width="14" height="6"/><rect x="32" y="26" width="14" height="4"/>
+        <rect x="54" y="30" width="14" height="5"/><rect x="76" y="22" width="14" height="8"/>
+        <rect x="120" y="30" width="14" height="4"/><rect x="142" y="25" width="14" height="5"/>
+        <rect x="164" y="30" width="14" height="6"/><rect x="186" y="27" width="14" height="3"/>
+        <rect x="208" y="30" width="14" height="5"/>
+      </g>
+      <rect x="98" y="30" width="14" height="26" fill="var(--fail)"/>
+      <path class="ln-f" d="M105 56 V58 H236"/>
+      <text class="t-f" x="240" y="48">empathy</text>
+      <text class="t-f" x="240" y="60">&minus;0.3</text>
+    </svg>
+    <p class="punch">One blended score: <b>8.5 &rarr; 8.5</b>.
+    <em>Nothing changed.</em> Two things did.</p>
+  </div>
+
+  <div class="imp">
+    <h3>Portable, and auditable</h3>
+    <p>Prompts, not infrastructure. One source, three platforms.</p>
+    <svg viewBox="0 0 300 62" role="img" aria-label="One rubric source of truth feeding three deployment platforms: AgentCore Lambda, Arize AX, and AgentCore native.">
+      <rect class="bx-a" x="1" y="18" width="92" height="26" rx="2"/>
+      <text class="t-l" x="47" y="35" text-anchor="middle">rubrics</text>
+      <path class="ln" d="M95 31 H124 M124 8 V54 M124 8 H150 M124 31 H150 M124 54 H150"/>
+      <rect class="bx" x="152" y="0" width="146" height="17" rx="2"/>
+      <text class="t-l" x="160" y="12">AgentCore Lambda</text>
+      <rect class="bx" x="152" y="23" width="146" height="17" rx="2"/>
+      <text class="t-l" x="160" y="35">Arize AX</text>
+      <rect class="bx" x="152" y="46" width="146" height="17" rx="2"/>
+      <text class="t-l" x="160" y="58">AgentCore native</text>
+    </svg>
+  </div>
+
+</div>
+<div class="status">
+  <p class="lbl">Status &mdash; read this before funding it</p>
+  <p>No judge has scored a real customer transcript. Zero. No agreement figure against human raters exists. The 660 samples are model-generated with an independent verifier; 68 contested. Built and runnable on three platforms &mdash; <strong>proposed, not validated</strong>. To validate: real labelled transcripts, and a human-agreement study.</p>
+</div>
+
+<footer>
+  <span>One shared vocabulary for product, risk, engineering.</span>
+  <span>10 judges &middot; ungated &middot; 660 labelled samples</span>
+</footer>
+
+</div>
+</body>
+</html>

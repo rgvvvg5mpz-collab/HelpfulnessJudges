@@ -27,6 +27,7 @@ compared side by side. Everything else substantive lives in the documents below.
 | [docs/methodology.md](docs/methodology.md) | Every prompt-architecture decision and its source. |
 | [docs/validation-protocol.md](docs/validation-protocol.md) | Gold set, agreement targets, drift monitoring, ship gates — the standard. |
 | [docs/proposed-testing.md](docs/proposed-testing.md) | What to test first, what it costs, and what we already know without running anything — the plan. |
+| [1pager-exec.html](1pager-exec.html) | One-page executive summary — problem, solution, impact. For technology leaders. |
 | [architecture.html](architecture.html) | The whole system on one page — source, reference runner, three paths, and what each gives up. |
 | [judges/](judges/) | The prompts — the source of truth all three paths derive from. |
 | [harness/](harness/) | The reference runner — the implementation all three paths were ported from and are validated against. Live and Batch execution, k-sample aggregation, the static validators. |
