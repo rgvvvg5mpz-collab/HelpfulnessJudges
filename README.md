@@ -22,7 +22,8 @@ deliberately thin; everything substantive lives in the documents below.
 | [docs/whitepaper.md](docs/whitepaper.md) | Construct-by-construct rationale, design decisions, full bibliography (77 refs). |
 | [docs/literature-review.md](docs/literature-review.md) | The underlying review, with citation-confidence flags. |
 | [docs/methodology.md](docs/methodology.md) | Every prompt-architecture decision and its source. |
-| [docs/validation-protocol.md](docs/validation-protocol.md) | Gold set, agreement targets, drift monitoring, ship gates. |
+| [docs/validation-protocol.md](docs/validation-protocol.md) | Gold set, agreement targets, drift monitoring, ship gates — the standard. |
+| [docs/proposed-testing.md](docs/proposed-testing.md) | What to test first, what it costs, and what we already know without running anything — the plan. |
 | [judges/](judges/) | The prompts. One flat folder; `_`-prefixed files are shared scaffolding. |
 | [harness/](harness/) | Loader, transcript renderer, turn policy, runner, validators. |
 | [data/](data/) | Hand-written fixtures, plus [660 labelled test samples](data/testsets/README.md) — 60 per judge, 20 per level. |
