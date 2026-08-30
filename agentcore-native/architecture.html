@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgentCore Native Judge Architecture</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#F2F4F1;--surface:#FBFCFA;--surface-alt:#E9ECE7;
+  --ink:#15191A;--ink-soft:#3A4341;--muted:#6A7370;
+  --rule:#D2D8D2;--rule-soft:#E2E6E0;
+  --accent:#0B5D51;--accent-ink:#084A41;--accent-wash:#DCE8E4;
+  --aws:#8A5715;--aws-wash:#F2E7D4;
+  --anthropic:#7A4E8C;--anthropic-wash:#EADFF0;
+  --fail:#8C2F2A;--fail-wash:#F3DEDC;
+  --f-d:"Spectral",Georgia,serif;
+  --f-b:"IBM Plex Sans",-apple-system,sans-serif;
+  --f-m:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0E1211;--surface:#161B19;--surface-alt:#1D2422;
+  --ink:#E7EBE7;--ink-soft:#BDC5C1;--muted:#8B9591;
+  --rule:#2B3431;--rule-soft:#222A28;
+  --accent:#63C3B0;--accent-ink:#8AD6C5;--accent-wash:#172A27;
+  --aws:#D9A75C;--aws-wash:#2A2317;
+  --anthropic:#C3A0D6;--anthropic-wash:#241C29;
+  --fail:#E0857E;--fail-wash:#2B1A19;
+}}
+:root[data-theme="dark"]{
+  --ground:#0E1211;--surface:#161B19;--surface-alt:#1D2422;
+  --ink:#E7EBE7;--ink-soft:#BDC5C1;--muted:#8B9591;
+  --rule:#2B3431;--rule-soft:#222A28;
+  --accent:#63C3B0;--accent-ink:#8AD6C5;--accent-wash:#172A27;
+  --aws:#D9A75C;--aws-wash:#2A2317;
+  --anthropic:#C3A0D6;--anthropic-wash:#241C29;
+  --fail:#E0857E;--fail-wash:#2B1A19;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--f-b);
+     font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:clamp(2rem,6vw,4rem) clamp(1rem,4vw,3rem) 5rem}
+p{margin:0 0 1em;color:var(--ink-soft)}
+.eyebrow{font-family:var(--f-m);font-size:.71rem;letter-spacing:.14em;text-transform:uppercase;
+         color:var(--muted);margin:0 0 1rem}
+h1{font-family:var(--f-d);font-weight:600;font-size:clamp(2rem,5vw,3rem);line-height:1.05;
+   letter-spacing:-.02em;margin:0 0 .8rem}
+.lede{font-family:var(--f-d);font-size:1.1rem;color:var(--ink-soft);max-width:64ch;margin:0 0 2rem}
+h2{font-family:var(--f-d);font-weight:600;font-size:1.5rem;margin:3rem 0 .3rem;letter-spacing:-.01em}
+.sec{font-family:var(--f-m);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;
+     color:var(--accent);margin:0 0 1.2rem}
+code,.m{font-family:var(--f-m);font-size:.85em}
+code{background:var(--surface-alt);padding:.1em .35em;border-radius:2px;color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:.5rem 1.1rem;margin:0 0 1.5rem;font-family:var(--f-m);font-size:.73rem}
+.key{display:inline-flex;align-items:center;gap:.4rem;color:var(--muted)}
+.sw{width:.85rem;height:.85rem;border-radius:2px;border:1px solid}
+.sw.you{background:var(--accent-wash);border-color:var(--accent)}
+.sw.aws{background:var(--aws-wash);border-color:var(--aws)}
+.sw.ant{background:var(--anthropic-wash);border-color:var(--anthropic)}
+figure{margin:0;background:var(--surface);border:1px solid var(--rule);padding:1.2rem;overflow-x:auto}
+figcaption{font-size:.85rem;color:var(--muted);margin-top:.9rem;padding-top:.8rem;
+           border-top:1px dotted var(--rule)}
+svg{display:block;min-width:900px;width:100%;height:auto}
+.t-lbl{font:500 12px var(--f-m);fill:var(--ink)}
+.t-sub{font:11px var(--f-b);fill:var(--muted)}
+.t-note{font:10px var(--f-m);fill:var(--muted)}
+.t-band{font:500 10px var(--f-m);fill:var(--muted);letter-spacing:.1em}
+.flow{stroke:var(--rule);stroke-width:1.5;fill:none}
+.flow-hi{stroke:var(--accent);stroke-width:2;fill:none}
+.tbl{width:100%;border-collapse:collapse;margin-top:1.2rem}
+.tbl th{font-family:var(--f-m);font-size:.67rem;letter-spacing:.1em;text-transform:uppercase;
+        color:var(--muted);text-align:left;font-weight:500;padding:.6rem .8rem .55rem 0;
+        border-bottom:1px solid var(--rule)}
+.tbl td{padding:.65rem .8rem .65rem 0;border-bottom:1px solid var(--rule-soft);
+        font-size:.9rem;color:var(--ink-soft);vertical-align:top}
+.tbl td:first-child{font-family:var(--f-m);font-size:.82rem;color:var(--ink);white-space:nowrap}
+.note{border-left:3px solid var(--accent);background:var(--accent-wash);padding:.9rem 1.1rem;margin:1.4rem 0}
+.note p{color:var(--ink);font-size:.92rem;margin:0}
+.note.warn{border-left-color:var(--fail);background:var(--fail-wash)}
+.cols{display:grid;gap:1.4rem;margin-top:1.3rem}
+@media(min-width:820px){.cols{grid-template-columns:1fr 1fr}}
+.card{border-top:2px solid var(--accent);padding-top:.9rem}
+.card.bad{border-top-color:var(--fail)}
+.card h3{font-family:var(--f-b);font-size:.95rem;font-weight:600;margin:0 0 .5rem;color:var(--ink)}
+.card p{font-size:.89rem;margin:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<p class="eyebrow">Helpfulness judges · AgentCore native llmAsAJudge</p>
+<h1>Architecture</h1>
+<p class="lede">AgentCore calls the model. No Lambda, no SDK, no code you run — and no control over the prompt's output contract, the sampling, or the verdict shape. This is the simplicity-first path.</p>
+
+<div class="legend">
+  <span class="key"><span class="sw you"></span> you build</span>
+  <span class="key"><span class="sw aws"></span> AWS managed</span>
+  <span class="key"><span class="sw ant"></span> model provider</span>
+</div>
+
+<figure>
+<svg viewBox="0 0 980 470" xmlns="http://www.w3.org/2000/svg" role="img"
+ aria-label="Chatbot emits OTel spans to CloudWatch; an online evaluation config samples sessions; ten native llmAsAJudge evaluators each call a Bedrock model with rendered instructions; results are written back to CloudWatch as evaluation events and metrics.">
+ <defs>
+  <marker id="a" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+    <path d="M0,1 L8,4.5 L0,8" fill="none" stroke="var(--rule)" stroke-width="1.5"/></marker>
+  <marker id="ah" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+    <path d="M0,1 L8,4.5 L0,8" fill="none" stroke="var(--accent)" stroke-width="2"/></marker>
+ </defs>
+
+ <text x="8" y="30" class="t-band">BUILD TIME</text>
+ <line x1="0" y1="40" x2="980" y2="40" stroke="var(--rule-soft)"/>
+ <text x="8" y="176" class="t-band">RUNTIME · ALL AWS-MANAGED</text>
+ <line x1="0" y1="186" x2="980" y2="186" stroke="var(--rule-soft)"/>
+ <text x="8" y="392" class="t-band">RESULTS</text>
+ <line x1="0" y1="402" x2="980" y2="402" stroke="var(--rule-soft)"/>
+
+ <rect x="60" y="56" width="240" height="96" rx="3" fill="var(--accent-wash)" stroke="var(--accent)"/>
+ <text x="76" y="80" class="t-lbl">rubrics/*.md</text>
+ <text x="76" y="100" class="t-sub">the reviewed source rubrics</text>
+ <text x="76" y="120" class="t-note">_scoring-tail.md NOT vendored:</text>
+ <text x="76" y="136" class="t-note">AgentCore owns the output contract</text>
+
+ <rect x="390" y="56" width="240" height="96" rx="3" fill="var(--accent-wash)" stroke="var(--accent)"/>
+ <text x="406" y="80" class="t-lbl">transform.py</text>
+ <text x="406" y="100" class="t-sub">rubric → native instructions</text>
+ <text x="406" y="120" class="t-note">strips output contract + How-to-score</text>
+ <text x="406" y="136" class="t-note">rewrites markers → {context}</text>
+ <path d="M300,104 L384,104" class="flow-hi" marker-end="url(#ah)"/>
+
+ <rect x="720" y="56" width="210" height="96" rx="3" fill="var(--aws-wash)" stroke="var(--aws)"/>
+ <text x="736" y="80" class="t-lbl">Evaluator ×10</text>
+ <text x="736" y="100" class="t-sub">llmAsAJudge</text>
+ <text x="736" y="120" class="t-note">instructions + ratingScale</text>
+ <text x="736" y="136" class="t-note">+ modelConfig</text>
+ <path d="M630,104 L714,104" class="flow-hi" marker-end="url(#ah)"/>
+ <text x="640" y="96" class="t-note">CreateEvaluator</text>
+
+ <rect x="60" y="206" width="240" height="90" rx="3" fill="var(--accent-wash)" stroke="var(--accent)"/>
+ <text x="76" y="230" class="t-lbl">Vanguard chatbot</text>
+ <text x="76" y="250" class="t-sub">emits OpenTelemetry spans</text>
+ <text x="76" y="270" class="t-note">session.id · service.name</text>
+ <text x="76" y="286" class="t-note">LLM + TOOL spans</text>
+
+ <rect x="390" y="206" width="240" height="90" rx="3" fill="var(--aws-wash)" stroke="var(--aws)"/>
+ <text x="406" y="230" class="t-lbl">CloudWatch</text>
+ <text x="406" y="250" class="t-sub">Transaction Search → aws/spans</text>
+ <text x="406" y="270" class="t-note">AgentCore assembles sessions</text>
+ <text x="406" y="286" class="t-note">and fills {context} itself</text>
+ <path d="M300,251 L384,251" class="flow" marker-end="url(#a)"/>
+
+ <rect x="720" y="206" width="210" height="90" rx="3" fill="var(--aws-wash)" stroke="var(--aws)"/>
+ <text x="736" y="230" class="t-lbl">OnlineEvaluationConfig</text>
+ <text x="736" y="250" class="t-sub">samples sessions, 2 tiers</text>
+ <text x="736" y="270" class="t-note">100% critical · 10% directional</text>
+ <text x="736" y="286" class="t-note">k is not a parameter — k=1 only</text>
+ <path d="M630,251 L714,251" class="flow" marker-end="url(#a)"/>
+
+ <rect x="390" y="316" width="240" height="70" rx="3" fill="var(--anthropic-wash)" stroke="var(--anthropic)"/>
+ <text x="406" y="340" class="t-lbl">Bedrock model</text>
+ <text x="406" y="360" class="t-sub">AgentCore builds the request</text>
+ <text x="406" y="378" class="t-note">+ appends its standardization prompt</text>
+ <path d="M800,300 L620,340" class="flow" marker-end="url(#a)"/>
+ <text x="650" y="316" class="t-note">invokes per judge</text>
+
+ <rect x="60" y="420" width="270" height="38" rx="3" fill="var(--fail-wash)" stroke="var(--fail)"/>
+ <text x="76" y="444" class="t-lbl">{reasoning, score} — forced shape</text>
+ <rect x="360" y="420" width="270" height="38" rx="3" fill="var(--aws-wash)" stroke="var(--aws)"/>
+ <text x="376" y="444" class="t-lbl">gen_ai.evaluation.result events</text>
+ <rect x="660" y="420" width="270" height="38" rx="3" fill="var(--aws-wash)" stroke="var(--aws)"/>
+ <text x="676" y="444" class="t-lbl">Bedrock-AgentCore/Evaluations</text>
+ <path d="M470,392 L280,414" class="flow" marker-end="url(#a)"/>
+ <path d="M510,392 L495,414" class="flow" marker-end="url(#a)"/>
+ <path d="M550,392 L740,414" class="flow" marker-end="url(#a)"/>
+</svg>
+<figcaption>Only the two green boxes are yours, and both are build-time. At runtime you own nothing — which is exactly the trade this path makes.</figcaption>
+</figure>
+
+<h2>What you give up, against the Lambda path</h2>
+<p class="sec">the honest cost</p>
+<table class="tbl">
+<thead><tr><th>Capability</th><th>Native llmAsAJudge</th><th>Code-based Lambda</th></tr></thead>
+<tbody>
+<tr><td>Rubrics used verbatim</td><td>No — <code>transform.py</code> rewrites every one</td><td>Yes, all 12 unchanged</td></tr>
+<tr><td>Structured verdict</td><td>Verdict flags compressed into <code>reasoning</code>, ~250-word budget. Evidence spans lost.</td><td>Full payload, schema-validated before serialisation</td></tr>
+<tr><td>k=5 + median</td><td>No — k is not a parameter anywhere</td><td>Yes, inside the handler</td></tr>
+<tr><td>Prompt caching</td><td>No — AgentCore builds the messages</td><td>Yes, on the shared preamble</td></tr>
+<tr><td>Reasoning effort</td><td><em>Possibly</em> via <code>additionalModelRequestFields</code> — unverified</td><td>Yes, explicit</td></tr>
+<tr><td>Tool-trace reconciliation</td><td>Only what <code>{context}</code> supplies, in an undocumented shape</td><td>Raw spans, re-rendered by you</td></tr>
+<tr><td>Operational surface</td><td><strong>None.</strong> No Lambda, no package, no key, no timeout</td><td>A Lambda with a 300 s ceiling and a secret to manage</td></tr>
+<tr><td>Anchor-set validity</td><td><strong>Broken</strong> — different prompts need a full re-baseline</td><td>Intact — identical prompts</td></tr>
+</tbody>
+</table>
+
+<div class="note warn">
+<p><strong>The decision in one line.</strong> This path is right if you want judges running this week with no infrastructure and can accept directional scores. It is wrong if the numbers must be comparable to the validated anchor set — because the prompts are no longer the prompts that were validated, and no amount of care in <code>transform.py</code> changes that.</p>
+</div>
+
+<h2>What the transform actually does</h2>
+<p class="sec">auditable, not implicit</p>
+<p>Run <code>native-judges diff</code> to see it per judge. For every rubric it removes the <code>## How to score</code> preamble section and the rubric's own <code>## Score</code> section — both prescribe an output contract AgentCore forbids you from writing — and rewrites 6–13 references to transcript markers that do not exist here (<code>[BEGIN TRANSCRIPT]</code>, <code>&gt;&gt;&gt; TARGET</code>, <code>[tool trace: …]</code>) into the closed placeholder vocabulary.</p>
+<p>It then appends two sections the rubrics never needed: a compact reasoning contract (<code>CHK C1=y C2=n … | TRIG y | BL -</code>) and a rating section whose wording matches the <code>ratingScale</code> labels exactly, so the model is not being asked for two different vocabularies.</p>
+</div>
+</body>
+</html>

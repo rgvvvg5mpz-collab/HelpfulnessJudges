@@ -1,0 +1,5 @@
+# Offline commands need only PyYAML.
+PyYAML>=6.0
+# Provisioning. Must know AgentCore Evaluations: bedrock-agentcore-control must
+# expose CreateEvaluator. Verified on 1.43.83.
+boto3>=1.43.0 ; extra == "deploy"

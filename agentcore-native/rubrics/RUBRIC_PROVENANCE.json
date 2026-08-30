@@ -1,0 +1,19 @@
+{
+  "source": "../judges",
+  "vendored_at_utc": "2026-08-29",
+  "files": {
+    "_preamble.md": "847b30e848674065",
+    "actionability.md": "2d41c72d8a9621ee",
+    "calibrated-hedging.md": "8e0b427af4ae238c",
+    "capability-honesty-traced.md": "f5b9ba1b79691435",
+    "capability-honesty.md": "88f99ca1555e2e39",
+    "conduct-adaptation.md": "ca618c3d866da445",
+    "effort-and-resolution-path.md": "950b8922aae3829e",
+    "emotional-accuracy.md": "fed5af7efb452609",
+    "empathic-attunement.md": "fccb0660e5c8f68d",
+    "need-coverage.md": "0064d537a22676a9",
+    "plain-language-clarity.md": "621325fadca57627",
+    "signal-density.md": "a746f29afc3889b7"
+  },
+  "note": "Vendored SOURCES. Unlike ../agentcore-integration these are NOT used verbatim \u2014 transform.py rewrites them into native `instructions`, because AgentCore appends its own standardization prompt forcing {reasoning, score} and restricts inputs to a closed placeholder set. _scoring-tail.md is deliberately absent: its entire job is prescribing an output contract that AgentCore forbids you from writing. See docs/DESIGN.md."
+}

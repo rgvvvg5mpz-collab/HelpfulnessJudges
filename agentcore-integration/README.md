@@ -165,3 +165,20 @@ Full list in [docs/LIMITS.md](docs/LIMITS.md). The ones that shape decisions:
 2. Does a ~1.5 KB JSON `explanation` survive intact and render readably?
 3. Is the account's Transaction Search change approved, and its cost understood?
 4. Do the chatbot's spans carry `session.id`, and do TOOL spans carry status?
+
+---
+
+## This folder is one of three
+
+The same ten judges deploy three ways. This is **AgentCore code-based Lambda**. The siblings are
+[`../arize-integration`](../arize-integration) and [`../agentcore-native`](../agentcore-native); the comparison and the choice between
+them is in [`../README.md`](../README.md).
+
+Each folder is standalone and duplicates what it needs — rubrics, test data,
+docs, diagrams. That is deliberate: you should be able to hand any one of them to
+a team without the others.
+
+**In this folder:** [architecture.html](architecture.html) ·
+[judges.html](judges.html) · [docs/TESTING.md](docs/TESTING.md) ·
+[docs/DESIGN.md](docs/DESIGN.md) · [docs/LIMITS.md](docs/LIMITS.md) ·
+[data/](data/)

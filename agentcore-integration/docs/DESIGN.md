@@ -18,9 +18,17 @@ AgentCore has a genuine LLM-as-judge feature, and it cannot host these rubrics:
   transcript has nowhere to go. The rubrics name `--- turn N | CUSTOMER ---`,
   ` >>> TARGET` and `[tool trace: ...]` **by name**; a service-formatted
   `{context}` in an undocumented shape drifts every rubric's meaning.
-- `inferenceConfig` exposes only maxTokens/temperature/topP: **no thinking
-  control, no cache control, no output schema** — which reproduces the Arize
-  fatal limitation exactly.
+- `inferenceConfig` exposes only maxTokens/temperature/topP — **no cache
+  control and no output schema.**
+
+  **Correction to an earlier version of this file:** it also said "no thinking
+  control", and that was overstated. `bedrockEvaluatorModelConfig` carries a
+  free-form `additionalModelRequestFields`, which on Bedrock is the standard
+  escape hatch for provider-specific parameters and is where Anthropic
+  `thinking` would go; and `responsesEvaluatorModelConfig` has an explicit
+  `reasoning.effort`. Neither is documented for Anthropic on Bedrock, so it is
+  unverified rather than impossible. See `../agentcore-native/docs/LIMITS.md`.
+  The rest of the rejection stands on its own.
 
 The Lambda path solves all of it, and inverts the verdict the Arize integration
 reached on code evaluators.

@@ -24,9 +24,45 @@ deliberately thin; everything substantive lives in the documents below.
 | [docs/methodology.md](docs/methodology.md) | Every prompt-architecture decision and its source. |
 | [docs/validation-protocol.md](docs/validation-protocol.md) | Gold set, agreement targets, drift monitoring, ship gates — the standard. |
 | [docs/proposed-testing.md](docs/proposed-testing.md) | What to test first, what it costs, and what we already know without running anything — the plan. |
-| [judges/](judges/) | The prompts. One flat folder; `_`-prefixed files are shared scaffolding. |
+| [judges/](judges/) | The prompts — the source of truth all three paths derive from. |
 | [harness/](harness/) | Loader, transcript renderer, turn policy, runner, validators. |
 | [data/](data/) | Hand-written fixtures, plus [660 labelled test samples](data/testsets/README.md) — 60 per judge, 20 per level. |
+
+
+## Three deployment paths
+
+The same ten judges, three places to run them. All three share one set of source
+rubrics in [judges/](judges/); each folder is **standalone** and carries its own
+copy, docs, architecture diagram, test data and test suite.
+
+| | Who runs the judge | Rubrics | k=5 | Schema | Reasoning effort | Choose when |
+|---|---|---|---|---|---|---|
+| **[agentcore-integration/](agentcore-integration/)**<br>AgentCore, code-based Lambda | your Lambda | **unchanged** | ✅ | ✅ enforced | ✅ | Fidelity matters. The numbers must be comparable to the validated anchor set. |
+| **[arize-integration/](arize-integration/)**<br>Arize AX template evaluators | Arize | 1 file rewritten | ❌ | ❌ | ❌ **unreachable** | Arize is already the observability system of record. |
+| **[agentcore-native/](agentcore-native/)**<br>AgentCore native `llmAsAJudge` | AgentCore | **rewritten** | ❌ | ❌ | ⚠️ unverified | You want judges running this week with zero infrastructure. |
+
+**The short version.** `agentcore-integration` preserves the suite as validated,
+because a Lambda calling Anthropic keeps the schema, the effort setting, prompt
+caching and k=5. `arize-integration` gives up reasoning effort entirely — graded
+*fatal* in its own docs. `agentcore-native` gives up the most but needs no
+infrastructure at all, and is honest that the prompts which run are not the
+prompts that were validated.
+
+They are **different instruments, not one instrument at three quality levels.**
+Running more than one is cheap and useful — cross-path disagreement isolates a
+platform effect from a judge effect. Averaging their scores is not defensible.
+
+Each folder carries:
+
+| | |
+|---|---|
+| `README.md` | how to run it, what it costs |
+| `architecture.html` | the data flow, one page |
+| `judges.html` | every judge — checks, bright lines, score bands, grounding |
+| `docs/TESTING.md` | testing strategy for that path |
+| `docs/DESIGN.md`, `docs/LIMITS.md` | why this shape; what it gives up |
+| `data/` | the 660 labelled samples and the hand-written fixtures |
+| `tests/test_suite.py` | offline, no credentials needed |
 
 ## Status
 

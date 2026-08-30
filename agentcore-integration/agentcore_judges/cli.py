@@ -84,10 +84,17 @@ def _run(a) -> int:
 
     if a.cmd == "check-drift":
         probs = check_drift()
-        for p in probs:
-            print(f"DRIFT {p}")
-        print("in sync with ../judges" if not probs else f"{len(probs)} drifted")
-        return 1 if any("changed" in p or "deleted" in p for p in probs) else 0
+        real = [p for p in probs if "changed" in p or "deleted" in p]
+        if not probs:
+            print("in sync with ../judges")
+        elif not real:
+            print(f"no reference to compare against ({probs[0]})")
+            print("this folder is standalone and still works; drift cannot be checked here")
+        else:
+            for p in real:
+                print(f"DRIFT {p}")
+            print(f"{len(real)} drifted")
+        return 1 if real else 0
 
     if a.cmd == "render":
         rb = load_rubrics([a.judge])[0]

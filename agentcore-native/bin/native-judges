@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+"""Re-execs into the sibling .venv when one exists.
+
+Compare sys.prefix, NOT sys.executable: `.venv/bin/python` is a symlink to the
+system interpreter, so resolving both paths makes them compare equal and the
+re-exec silently never happens.
+"""
+import os, pathlib, sys
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+VENV = ROOT / ".venv" / "bin" / "python"
+if (VENV.exists() and not os.environ.get("NJ_REEXEC")
+        and pathlib.Path(sys.prefix) != (ROOT / ".venv")):
+    os.environ["NJ_REEXEC"] = "1"
+    os.execv(str(VENV), [str(VENV), __file__, *sys.argv[1:]])
+sys.path.insert(0, str(ROOT))
+try:
+    import yaml  # noqa: F401
+except ModuleNotFoundError:
+    sys.exit(f"native-judges needs PyYAML:\n  {ROOT/'.venv/bin/pip'} install -r "
+             f"{ROOT/'requirements.txt'}")
+from native_judges.cli import main
+raise SystemExit(main())

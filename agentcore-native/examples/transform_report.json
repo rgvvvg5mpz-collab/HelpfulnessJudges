@@ -1,0 +1,12 @@
+{
+  "judge_id": "signal-density",
+  "level": "TRACE",
+  "chars": 11489,
+  "rewrites": 6,
+  "removed": [
+    "## How to score",
+    "signal-density: ## Score",
+    "signal-density: _scoring-tail.md (AgentCore owns the output contract)"
+  ],
+  "residual_markers": []
+}

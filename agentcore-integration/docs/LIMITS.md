@@ -97,7 +97,12 @@ set — `{context}`, `{assistant_turn}`, `{tool_turn}`, `{available_tools}` — 
 no custom-variable mechanism. The rubrics name their transcript markers
 explicitly, so a service-formatted `{context}` in an undocumented shape silently
 drifts every rubric's meaning. Its `inferenceConfig` also exposes only
-maxTokens/temperature/topP: no thinking control, no cache control, no schema.
+maxTokens/temperature/topP: no cache control and no schema.
+
+Reasoning control on that path is **unverified rather than absent** — see
+`../agentcore-native/docs/LIMITS.md`. That correction does not change the
+recommendation, because the output contract and placeholder constraints are the
+binding ones.
 
 ---
 

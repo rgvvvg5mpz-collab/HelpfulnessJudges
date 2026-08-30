@@ -147,3 +147,20 @@ Read [docs/LIMITS.md](docs/LIMITS.md) before committing. In severity order:
    no documented default; we set it explicitly on all eleven.
 6. Is the space Enterprise? Custom code evaluators are gated, which is the only
    thing standing between you and an in-Arize deterministic re-scoring pass.
+
+---
+
+## This folder is one of three
+
+The same ten judges deploy three ways. This is **Arize AX**. The siblings are
+[`../agentcore-integration`](../agentcore-integration) and [`../agentcore-native`](../agentcore-native); the comparison and the choice between
+them is in [`../README.md`](../README.md).
+
+Each folder is standalone and duplicates what it needs — rubrics, test data,
+docs, diagrams. That is deliberate: you should be able to hand any one of them to
+a team without the others.
+
+**In this folder:** [architecture.html](architecture.html) ·
+[judges.html](judges.html) · [docs/TESTING.md](docs/TESTING.md) ·
+[docs/DESIGN.md](docs/DESIGN.md) · [docs/LIMITS.md](docs/LIMITS.md) ·
+[data/](data/)
