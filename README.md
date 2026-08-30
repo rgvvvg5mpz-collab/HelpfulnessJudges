@@ -27,8 +27,10 @@ compared side by side. Everything else substantive lives in the documents below.
 | [docs/methodology.md](docs/methodology.md) | Every prompt-architecture decision and its source. |
 | [docs/validation-protocol.md](docs/validation-protocol.md) | Gold set, agreement targets, drift monitoring, ship gates — the standard. |
 | [docs/proposed-testing.md](docs/proposed-testing.md) | What to test first, what it costs, and what we already know without running anything — the plan. |
+| [architecture.html](architecture.html) | The whole system on one page — source, reference runner, three paths, and what each gives up. |
 | [judges/](judges/) | The prompts — the source of truth all three paths derive from. |
 | [harness/](harness/) | The reference runner — the implementation all three paths were ported from and are validated against. Live and Batch execution, k-sample aggregation, the static validators. |
+| [tools/check_vendoring.py](tools/check_vendoring.py) | Cross-folder drift check. The only thing that sees all four implementations, so the only thing that can catch an edited vendored copy or a missing folder. |
 | [data/](data/) | Hand-written fixtures, plus [660 labelled test samples](data/testsets/README.md) — 60 per judge, 20 per level. |
 
 
@@ -96,6 +98,7 @@ transcript, and no agreement figure exists for any judge.
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r harness/requirements.txt
 .venv/bin/python -m harness.validate_suite                    # static checks
+python3 tools/check_vendoring.py                              # all four implementations in sync?
 .venv/bin/python -m harness.run_judges --input data/gold/examples.jsonl --dry-run
 ```
 
