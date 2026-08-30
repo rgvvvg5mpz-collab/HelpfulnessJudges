@@ -53,7 +53,7 @@ human–LLM consistency**. Irrelevant criteria inject noise. The practical targe
 is 5–8 checks per construct; a check that never changes a score on the
 validation set should be deleted.
 
-> **Applied here:** twelve separate prompts, each with one criterion, 5–7 binary
+> **Applied here:** ten separate prompts, each with one criterion, 5–7 binary
 > checks, and a written description of every score level. See
 > [methodology.md](methodology.md).
 

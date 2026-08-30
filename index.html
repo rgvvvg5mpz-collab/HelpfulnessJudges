@@ -31,6 +31,14 @@ a.card h2{font-family:"IBM Plex Mono",monospace;font-size:.95rem;font-weight:500
 a.card p{margin:0;font-size:.92rem;color:var(--ink-soft)}
 footer{margin-top:2.2rem;padding-top:1.2rem;border-top:1px solid var(--rule);font-size:.86rem;color:var(--muted)}
 a{color:var(--accent-ink)}
+    .sec{font-family:Spectral,Georgia,serif;font-weight:600;font-size:1.35rem;letter-spacing:-.01em;margin:2.6rem 0 .5rem}
+    .secnote{font-size:.92rem;color:var(--ink-soft);margin:0 0 1.1rem}
+    .path{background:var(--surface);border:1px solid var(--rule);border-left:2px solid var(--accent);padding:1.1rem 1.25rem;margin-bottom:.9rem}
+    .path h3{font-family:"IBM Plex Mono",monospace;font-size:.95rem;font-weight:500;margin:0 0 .18rem;color:var(--accent-ink)}
+    .path .sub{font-size:.79rem;color:var(--muted);margin:0 0 .5rem}
+    .path p.d{margin:0 0 .6rem;font-size:.92rem;color:var(--ink-soft)}
+    .path .links{margin:0;font-family:"IBM Plex Mono",monospace;font-size:.8rem}
+    .path .links a{margin-right:.9rem;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -48,6 +56,30 @@ a{color:var(--accent-ink)}
     <h2>README.html →</h2>
     <p>The static reference. Suite table and a worked pass / warning / hard-failure example for every judge, in reading order.</p>
   </a>
+
+  <h2 class="sec">Deployment paths</h2>
+  <p class="secnote">The same ten judges, three places to run them. Each folder is standalone &mdash; its own copy of the rubrics, its own docs, tests and labelled data. They are <strong>different instruments, not one instrument at three quality levels</strong>; averaging their scores is not defensible.</p>
+
+  <div class="path">
+    <h3>agentcore-integration</h3>
+    <p class="sub">Bedrock AgentCore &middot; code-based Lambda evaluator</p>
+    <p class="d">Preserves the suite as validated: rubrics unchanged, JSON schema enforced, reasoning effort set, prompt caching, k=5 median. Choose it when the numbers must stay comparable to the anchor set.</p>
+    <p class="links"><a href="agentcore-integration/architecture.html">architecture &rarr;</a><a href="agentcore-integration/judges.html">judges &rarr;</a><a href="agentcore-integration/docs/COMPARISON.html">comparison &rarr;</a></p>
+  </div>
+
+  <div class="path">
+    <h3>arize-integration</h3>
+    <p class="sub">Arize AX &middot; template evaluators, hosted by Arize</p>
+    <p class="d">Arize runs the prompt. One scoring file is rewritten; the rest is byte-identical. Gives up reasoning effort entirely &mdash; graded <em>fatal</em> in its own docs. Choose it when Arize is already the system of record.</p>
+    <p class="links"><a href="arize-integration/architecture.html">architecture &rarr;</a><a href="arize-integration/judges.html">judges &rarr;</a></p>
+  </div>
+
+  <div class="path">
+    <h3>agentcore-native</h3>
+    <p class="sub">Bedrock AgentCore &middot; native <code>llmAsAJudge</code>, no infrastructure</p>
+    <p class="d">Every rubric is rewritten at deploy time to fit the platform's forced output contract. Gives up the most, needs no infrastructure at all, and is honest that the prompts which run are not the prompts that were validated.</p>
+    <p class="links"><a href="agentcore-native/architecture.html">architecture &rarr;</a><a href="agentcore-native/judges.html">judges &rarr;</a></p>
+  </div>
 
   <footer>
     <p>Source, rubrics and whitepaper: <a href="https://github.com/rgvvvg5mpz-collab/HelpfulnessJudges">github.com/rgvvvg5mpz-collab/HelpfulnessJudges</a></p>

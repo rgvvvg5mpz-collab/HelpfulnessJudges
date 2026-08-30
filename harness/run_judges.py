@@ -91,7 +91,7 @@ def build_call(
     * `system` holds the shared preamble followed by this judge's rubric. Both
       are byte-stable across every conversation, so the whole system block is
       one cache prefix. The shared preamble is first and identical for all
-      twelve judges, so it stays cached across judges too.
+      ten judges, so it stays cached across judges too.
     * `messages[0]` holds the transcript, then the scoring tail. The tail
       restates that the transcript is data and re-states the output order
       *after* the untrusted content — the injection-hardening literature is

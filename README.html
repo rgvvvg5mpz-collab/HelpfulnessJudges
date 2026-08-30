@@ -505,9 +505,34 @@ docs/
   literature-review.md        the review, with citation-confidence flags
   methodology.md              every prompt-design decision and its source
   validation-protocol.md      gold set, agreement targets, drift monitoring, ship gates
+  proposed-testing.md         how to test the judges themselves, and what it would cost
 data/
   gold/examples.jsonl         hand-written fixtures, incl. a doom loop and an injection control
-  testsets/&lt;judge-id&gt;.jsonl    60 labelled samples per judge (20 pass / 20 warning / 20 fail)</pre>
+  testsets/&lt;judge-id&gt;.jsonl    60 labelled samples per judge (20 pass / 20 warning / 20 fail)
+
+agentcore-integration/        AgentCore, code-based Lambda — rubrics unchanged, schema + effort + k=5
+arize-integration/            Arize AX template evaluators — Arize runs the prompt
+agentcore-native/             AgentCore native llmAsAJudge — rubrics rewritten at deploy time</pre>
+
+  <p>The four areas above are the <strong>source</strong>: <code>judges/</code> and <code>data/</code> are what the
+  three deployment folders vendor from, <code>harness/</code> is the reference runner they were ported from and
+  are validated against, and <code>docs/</code> is the research behind all of it. Each deployment folder is
+  standalone — it carries its own copy of the rubrics, its own architecture diagram, judge reference, testing
+  strategy, labelled data and test suite, and can be handed to a team on its own.</p>
+
+  <p class="sec-note" style="margin-top:1.2rem">Per path</p>
+  <ul>
+    <li><strong>agentcore-integration</strong> —
+      <a href="agentcore-integration/architecture.html">architecture</a> ·
+      <a href="agentcore-integration/judges.html">judges</a> ·
+      <a href="agentcore-integration/docs/COMPARISON.html">comparison</a></li>
+    <li><strong>arize-integration</strong> —
+      <a href="arize-integration/architecture.html">architecture</a> ·
+      <a href="arize-integration/judges.html">judges</a></li>
+    <li><strong>agentcore-native</strong> —
+      <a href="agentcore-native/architecture.html">architecture</a> ·
+      <a href="agentcore-native/judges.html">judges</a></li>
+  </ul>
 </section>
 
 <footer>

@@ -287,7 +287,7 @@ average out — never for an item reported to a stakeholder or gating a release.
 
 **Caching.** The system block holds the shared preamble followed by the judge
 rubric, both byte-stable across every conversation, with the cache breakpoint at
-the end. The shared preamble is identical across all twelve judges and comes
+the end. The shared preamble is identical across all ten judges and comes
 first, so it stays cached across judges as well as across conversations. Only the
 transcript varies, and it sits in the user message after the breakpoint.
 

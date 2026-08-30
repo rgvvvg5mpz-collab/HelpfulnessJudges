@@ -43,7 +43,7 @@ conversations, and do not treat v2.0.0 as final.
 ## 2. Build the gold set
 
 **Size.** 300–400 conversations, double- or triple-labeled by SMEs, scored on
-*all* dimensions at once — labeling a conversation once amortizes across twelve
+*all* dimensions at once — labeling a conversation once amortizes across ten
 judges. Published practice clusters around 50–100 items for a rough correction
 factor and 200–450 for a defensible per-dimension validation; roughly balanced
 binary criteria pin Cohen's kappa to about ±0.10–0.15 at n=50. Work backwards
@@ -215,7 +215,7 @@ Paired bootstrap on the per-conversation score difference (~10,000 resamples,
 two-tailed interval on the paired difference). Pairing cancels item-level
 variance.
 
-With twelve judges you are running twelve simultaneous tests. **Predeclare the
+With ten judges you are running ten simultaneous tests. **Predeclare the
 primary dimension** and apply Holm–Bonferroni within the predefined family.
 Report the interval, not just a p-value.
 
@@ -249,7 +249,7 @@ In priority order:
 
 ## 9. Cost control
 
-Twelve judges × k=5 × a 3-model panel is 180 calls per conversation. At any real
+Ten judges × k=5 × a 3-model panel is 150 calls per conversation. At any real
 volume that dominates inference cost. Tier deliberately:
 
 - **Full treatment** (k=5, panel, both orders where applicable) for the two or

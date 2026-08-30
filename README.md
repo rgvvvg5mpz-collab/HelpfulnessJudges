@@ -4,6 +4,9 @@ Ten independent prompt-based LLM judges for a retail-investment chatbot —
 empathy, emotional intelligence, completeness, actionability, clarity, effort,
 accommodation and honesty — plus one variant judge.
 
+**Published site: <https://rgvvvg5mpz-collab.github.io/HelpfulnessJudges/>** — the
+two readmes below are HTML, so on github.com they render as source. Read them there.
+
 Two readmes, both HTML, both opened in a browser:
 
 - **[README.interactive.html](README.interactive.html)** — filter the suite,
@@ -12,8 +15,8 @@ Two readmes, both HTML, both opened in a browser:
 - **[README.html](README.html)** — the static reference. Same suite table and a
   worked pass / warning / hard-failure example per judge, in reading order.
 
-This file is a short index so the repo is navigable from a terminal. It is
-deliberately thin; everything substantive lives in the documents below.
+This file is the index, and it is the one place the three deployment paths are
+compared side by side. Everything else substantive lives in the documents below.
 
 | | |
 |---|---|
@@ -25,9 +28,27 @@ deliberately thin; everything substantive lives in the documents below.
 | [docs/validation-protocol.md](docs/validation-protocol.md) | Gold set, agreement targets, drift monitoring, ship gates — the standard. |
 | [docs/proposed-testing.md](docs/proposed-testing.md) | What to test first, what it costs, and what we already know without running anything — the plan. |
 | [judges/](judges/) | The prompts — the source of truth all three paths derive from. |
-| [harness/](harness/) | Loader, transcript renderer, turn policy, runner, validators. |
+| [harness/](harness/) | The reference runner — the implementation all three paths were ported from and are validated against. Live and Batch execution, k-sample aggregation, the static validators. |
 | [data/](data/) | Hand-written fixtures, plus [660 labelled test samples](data/testsets/README.md) — 60 per judge, 20 per level. |
 
+
+## What this root is
+
+Each of the three folders below does exactly one job and says so in its first
+section. This root does five, and until now said so nowhere — which is what made
+it look like a fourth, unfinished path. It is not. It is the upstream:
+
+| | |
+|---|---|
+| **Source of truth** | `judges/` and `data/` are what all three deployment folders vendor from. Edit a rubric here, re-vendor, then run each folder's `check-drift`. |
+| **Reference runner** | `harness/` is the implementation the three were ported from, and the only one that can batch-score a whole corpus or produce an agreement figure. It is the instrument, not a fourth product. |
+| **The research** | `docs/` belongs to no single path — the whitepaper, the review, the methodology and the validation standard are about the judges themselves. |
+| **The hub** | this file, where the three paths are compared. |
+| **The published site** | `index.html` and the two HTML readmes. |
+
+Nothing here is stale, and nothing here deploys. If you are shipping judges, go
+to one of the three folders. If you are changing what a judge *is*, you are in
+the right place.
 
 ## Three deployment paths
 
