@@ -14,9 +14,8 @@ import json
 from dataclasses import dataclass, field
 from typing import Any
 
+from . import LABELS
 from .spec import Rubric
-
-LABELS = ("1.0", "0.5", "0")
 
 
 @dataclass

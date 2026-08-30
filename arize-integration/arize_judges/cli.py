@@ -6,11 +6,16 @@ Offline (PyYAML only, no account needed):
     arize-judges render --judge empathic-attunement [--out build/]
     arize-judges plan --space SPACE --integration INTEGRATION
     arize-judges verify payloads.jsonl
+    arize-judges score --dry-run --limit 6
 
 Talks to Arize (needs `pip install arize pandas` and ARIZE_API_KEY):
     arize-judges provision --space SPACE --integration INTEGRATION --apply
     arize-judges tasks --project PROJECT --apply
     arize-judges export --space SPACE --project PROJECT --hours 24
+
+Talks to Anthropic (needs `pip install anthropic` and ANTHROPIC_API_KEY). This is
+offline rubric validation only — Arize still owns execution in production:
+    arize-judges score --judge actionability --limit 6 --yes
 """
 
 from __future__ import annotations
@@ -24,6 +29,7 @@ from .export import expand, summarise
 from .naming import eval_columns
 from .provision import LlmSettings, apply, plan, read_lock, task_plan
 from .render import render_all
+from .score import run as score_run
 from .spec import check_drift, deployable, load_rubrics
 from .verify import verify
 
@@ -68,6 +74,23 @@ def main(argv: list[str] | None = None) -> int:
 
     v = sub.add_parser("verify", help="validate payloads from a JSONL file")
     v.add_argument("path", type=Path)
+
+    s = sub.add_parser("score", help="score rubrics against data/testsets/ offline")
+    s.add_argument("--judge", action="append",
+                   help="repeatable; default is every deployable judge")
+    s.add_argument("--limit", type=int, default=6,
+                   help="samples per judge, drawn balanced across the three expected_score "
+                        "bands; 0 means all 60 (default: %(default)s)")
+    s.add_argument("--k", type=int, default=1,
+                   help="draws per sample (default: %(default)s). k>1 measures the RUBRIC's "
+                        "stability, NOT the deployed system's — Arize has no repetition "
+                        "primitive, so production is k=1 whatever you set here")
+    s.add_argument("--dry-run", action="store_true",
+                   help="build every prompt and call nothing; the default when no API key is set")
+    s.add_argument("--out", type=Path, help="write per-item results as JSONL")
+    s.add_argument("--seed", type=int, default=0,
+                   help="deterministic sampling (default: %(default)s)")
+    s.add_argument("--yes", action="store_true", help="skip the cost confirmation")
 
     e = sub.add_parser("export", help="read evals back, validate, expand check vectors")
     e.add_argument("--space", required=True); e.add_argument("--project", required=True)
@@ -176,6 +199,10 @@ def _run(a) -> int:
                 print(f"warn {rec['judge_id']}: {w}")
         print(f"\n{bad} invalid payload(s)")
         return 1 if bad else 0
+
+    if a.cmd == "score":
+        return score_run(a.judge, limit=a.limit, k=a.k, seed=a.seed,
+                         dry_run=a.dry_run, out=a.out, yes=a.yes)
 
     if a.cmd == "export":
         import datetime as dt

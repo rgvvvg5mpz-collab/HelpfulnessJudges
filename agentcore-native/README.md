@@ -6,7 +6,7 @@ AgentCore calls the model. No Lambda, no SDK, no API key, no code you run.
 Standalone. **[architecture.html](architecture.html)** is the one-page picture.
 
 > **Status: designed and tested offline, never run against an AWS account.**
-> Shapes verified against botocore `1.43.83` service models. **77 offline checks
+> Shapes verified against botocore `1.43.83` service models. **192 offline checks
 > pass** with no credentials.
 
 ---
@@ -56,12 +56,22 @@ Three consequences, none avoidable:
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-.venv/bin/python -m tests.test_suite      # 77 checks, no credentials
+.venv/bin/python -m tests.test_suite      # 192 checks, no credentials
 bin/native-judges list
 bin/native-judges diff                    # exactly what the transform removes, per judge
 bin/native-judges show --judge signal-density --full
 bin/native-judges validate                # strict: enums, patterns, bounds
+bin/native-judges score --dry-run         # score the transformed prompts; nothing sent
 ```
+
+`score` reports three outcomes, not two. An answer that broke the output contract
+is `unparseable` and stays in `n`, in `fp0`/`fn0` and in the band columns — that
+failure rate is the measurement. A call that never got an answer at all (a 429, a
+401, a dropped connection) is `transport`, excluded from every column and printed
+on its own line, because reporting an expired key as "this judge missed a hard
+failure" would be worse than reporting nothing. The default draw is the 10
+deployable judges; `--judge capability-honesty-traced` scores the variant that
+mutual exclusion keeps out of the default set.
 
 `diff` is the command to run first. It prints, per judge, every section removed
 and how many marker references were rewritten — so the divergence from the

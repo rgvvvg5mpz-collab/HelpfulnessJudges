@@ -82,11 +82,16 @@ Use them for what they are good for:
 ## Using them
 
 ```bash
-.venv/bin/python -m harness.testsets validate                       # shape + balance checks
-.venv/bin/python -m harness.run_judges --input data/testsets/actionability.jsonl \
-    --judges actionability --k 5 --out runs/actionability.jsonl
-.venv/bin/python -m harness.testsets score runs/actionability.aggregated.jsonl
+bin/agentcore-judges score --dry-run --limit 6                      # free: builds every prompt
+bin/agentcore-judges score --judge actionability --limit 6 \
+    --out runs/actionability.jsonl --yes
+bin/agentcore-judges verify runs/actionability.jsonl
 ```
+
+The shape and balance checks are in `tests/test_suite.py`, which reads every set
+on every run. `score` draws its samples balanced across the three bands and at a
+fixed seed — an unbalanced draw moves the exact-match rate on a 20/20/20 set
+without any judge behaviour changing.
 
 `score` reports exact-match rate and, separately, the hard-failure confusion —
 how often the judge cries failure where the label is not 0 (`fp0`) and how often

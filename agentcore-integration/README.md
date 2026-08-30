@@ -9,7 +9,7 @@ CloudWatch setup, and the architecture.
 
 > **Status: designed and tested offline, never run against an AWS account.**
 > API shapes were verified by reading botocore `1.43.83` service models, not the
-> documentation. **51 offline checks pass** with no AWS credentials.
+> documentation. **134 offline checks pass** with no AWS credentials.
 
 **[architecture.html](architecture.html)** — the data flow, one page.
 **[docs/COMPARISON.pdf](docs/COMPARISON.pdf)** — AgentCore vs Arize, with citations.
@@ -88,7 +88,7 @@ AgentCore return boundary, *after* validation.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-.venv/bin/python -m tests.test_suite              # 51 checks, no credentials
+.venv/bin/python -m tests.test_suite              # 134 checks, no credentials
 bin/agentcore-judges list
 bin/agentcore-judges check-drift                  # vendored rubrics vs ../judges
 bin/agentcore-judges render --judge signal-density
@@ -128,6 +128,8 @@ agentcore_judges/
   spans.py                   CloudWatch OTel spans -> transcript (trace-grouped)
   judge.py                   the Anthropic call: k=5, json_schema, effort, caching
   handler.py                 the Lambda; one handler, dispatches on evaluator name
+  boundary.py                Verdict -> AgentCore's {label, value, explanation}
+  score.py                   offline scoring against data/testsets/
   verify.py                  payload validation + label recomputation
   provision.py               CreateEvaluator / OnlineEvaluationConfig + strict validator
   naming.py                  judge id -> evaluatorName (no hyphens allowed)
@@ -139,7 +141,7 @@ docs/
   DESIGN.md                  why this shape; rejected alternatives
   LIMITS.md                  what this costs, graded
   RUNBOOK.md                 ordered deployment
-tests/test_suite.py          51 offline checks
+tests/test_suite.py          134 offline checks
 ```
 
 ## Known limits

@@ -1,5 +1,11 @@
-# Offline commands need only PyYAML.
+# Offline commands (list, check-drift, diff, show, score --dry-run) need only PyYAML.
 PyYAML>=6.0
+
 # Provisioning. Must know AgentCore Evaluations: bedrock-agentcore-control must
-# expose CreateEvaluator. Verified on 1.43.83.
-boto3>=1.43.0 ; extra == "deploy"
+# expose CreateEvaluator. Verified on 1.43.83. `validate` needs it too.
+boto3>=1.43.0
+
+# `score` without --dry-run calls Anthropic directly to grade the TRANSFORMED
+# prompts offline. AgentCore runs them itself in production; this is how you find
+# out whether the transform broke a judge before you deploy it.
+anthropic>=1.0.0

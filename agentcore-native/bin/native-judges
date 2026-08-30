@@ -4,10 +4,27 @@
 Compare sys.prefix, NOT sys.executable: `.venv/bin/python` is a symlink to the
 system interpreter, so resolving both paths makes them compare equal and the
 re-exec silently never happens.
+
+All three dependencies get the same missing-module message. PyYAML is imported
+here and fails immediately; boto3 and anthropic are imported lazily, inside the
+two commands that need them, so their absence used to surface mid-command as a
+raw traceback — the same operator error, told twice as well and once as a stack
+trace. The lazy imports are deliberate (every offline command runs on PyYAML
+alone), so the fix is to translate the failure here rather than to hoist them.
 """
 import os, pathlib, sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 VENV = ROOT / ".venv" / "bin" / "python"
+
+# import name -> what you actually pip install, where the two differ.
+PACKAGE = {"yaml": "PyYAML"}
+
+
+def needs(module: str) -> str:
+    return (f"native-judges needs {PACKAGE.get(module, module)}:\n"
+            f"  {ROOT/'.venv/bin/pip'} install -r {ROOT/'requirements.txt'}")
+
+
 if (VENV.exists() and not os.environ.get("NJ_REEXEC")
         and pathlib.Path(sys.prefix) != (ROOT / ".venv")):
     os.environ["NJ_REEXEC"] = "1"
@@ -16,7 +33,10 @@ sys.path.insert(0, str(ROOT))
 try:
     import yaml  # noqa: F401
 except ModuleNotFoundError:
-    sys.exit(f"native-judges needs PyYAML:\n  {ROOT/'.venv/bin/pip'} install -r "
-             f"{ROOT/'requirements.txt'}")
+    sys.exit(needs("yaml"))
 from native_judges.cli import main
-raise SystemExit(main())
+try:
+    code = main()
+except ModuleNotFoundError as exc:
+    sys.exit(needs(exc.name or "a dependency"))
+raise SystemExit(code)

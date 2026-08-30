@@ -6,6 +6,10 @@ Offline (PyYAML only — no AWS account, no credentials, no network):
     agentcore-judges plan --lambda-arn ARN
     agentcore-judges render --judge signal-density
     agentcore-judges verify results.jsonl
+    agentcore-judges score --dry-run --limit 6
+
+Needs an Anthropic API key (score without --dry-run; it is a paid run):
+    agentcore-judges score --judge actionability --limit 6 --out runs/a.jsonl --yes
 
 Needs boto3 (validate also needs it, but makes no API call):
     agentcore-judges validate --lambda-arn ARN
@@ -22,10 +26,13 @@ import sys
 from pathlib import Path
 
 from . import LEVELS, MAX_EVALUATORS_PER_CONFIG, UNIT_TO_LEVEL
-from .judge import build_request
+from .judge import K as JUDGE_K, build_request
 from .naming import to_evaluator_name
 from .provision import (LambdaTarget, TIERS, apply, online_config_payload, plan,
                         read_lock, validate_request)
+from .score import (confirm, dry_run_report, format_report, have_api_key,
+                    load_testset, open_client, prepare_out, resolve_rubrics,
+                    run_item, select, shortfalls, tally, write_results)
 from .spec import check_drift, deployable, load_rubrics
 from .verify import verify
 
@@ -55,6 +62,20 @@ def main(argv: list[str] | None = None) -> int:
     o.add_argument("--apply", action="store_true")
 
     v = sub.add_parser("verify"); v.add_argument("path", type=Path)
+
+    s = sub.add_parser("score", help="score judges against data/testsets/")
+    s.add_argument("--judge", action="append", dest="judges",
+                   help="repeatable; default is every deployable judge")
+    s.add_argument("--limit", type=int, default=6,
+                   help="samples per judge, band-balanced; 0 means all 60")
+    s.add_argument("--k", type=int, default=JUDGE_K,
+                   help=f"samples per item (default {JUDGE_K}, as deployed)")
+    s.add_argument("--dry-run", action="store_true",
+                   help="build every prompt, call nothing (default with no API key)")
+    s.add_argument("--out", type=Path, help="per-item JSONL results")
+    s.add_argument("--seed", type=int, default=0)
+    s.add_argument("--traced", action="store_true")
+    s.add_argument("--yes", action="store_true", help="skip the cost confirmation")
 
     a = ap.parse_args(argv)
     try:
@@ -151,6 +172,12 @@ def _run(a) -> int:
             if not line.strip():
                 continue
             rec = json.loads(line)
+            if rec.get("transport"):
+                # No answer was ever received, so there is no payload to reject.
+                # Counting it invalid would repeat the conflation the scorer's
+                # own transport line exists to undo.
+                print(f"skip {rec['judge_id']}: transport failure, no payload")
+                continue
             res = verify(rubrics[rec["judge_id"]], rec.get("explanation"),
                          rec.get("label"), transcript=rec.get("transcript"))
             if not res.ok:
@@ -160,6 +187,43 @@ def _run(a) -> int:
                 print(f"warn {rec['judge_id']}: {w}")
         print(f"\n{bad} invalid")
         return 1 if bad else 0
+
+    if a.cmd == "score":
+        rubrics = resolve_rubrics(a.judges, traced=a.traced)
+        sets = [(r, load_testset(r)) for r in rubrics]
+        plan_ = [(r, select(items, judge_id=r.id, limit=a.limit, seed=a.seed))
+                 for r, items in sets]
+        shorts = [s for r, items in sets
+                  for s in shortfalls(items, judge_id=r.id, limit=a.limit)]
+        # Before the dry run, and so before the confirmation: an unwritable --out
+        # must cost a re-run, not a run. The dry run is the rehearsal, so it
+        # rehearses this too.
+        out = prepare_out(a.out) if a.out else None
+
+        have_key = have_api_key()
+        if a.dry_run or not have_key:
+            print(dry_run_report(plan_, k=a.k, have_key=have_key, shorts=shorts))
+            return 0
+
+        calls = sum(len(items) for _, items in plan_) * a.k
+        if not confirm(calls, yes=a.yes):
+            return 2
+
+        client = open_client()
+        results, tallies = [], []
+        for rubric, items in plan_:
+            got = []
+            for n, item in enumerate(items, 1):
+                print(f"  {rubric.id} {n}/{len(items)} {item.id}", file=sys.stderr)
+                got.append(run_item(rubric, item, k=a.k, client=client))
+            results.extend(got)
+            tallies.append(tally(rubric.id, got))
+        print()
+        print(format_report(tallies, shorts))
+        if out:
+            write_results(out, results)
+            print(f"\nwrote {len(results)} result(s) to {out}")
+        return 0
     return 0
 
 

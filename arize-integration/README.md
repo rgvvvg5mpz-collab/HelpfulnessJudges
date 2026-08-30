@@ -49,6 +49,7 @@ bin/arize-judges list                      # the suite, and what deploys
 bin/arize-judges check-drift               # vendored rubrics vs ../judges
 bin/arize-judges render --out build/       # compiled templates, hashed
 bin/arize-judges plan --space SPACE --integration INT | head -60
+bin/arize-judges score --dry-run --limit 6  # rubric vs data/testsets/, no calls
 ```
 
 `list`, `check-drift`, `render`, `plan` and `verify` need only **PyYAML**. They

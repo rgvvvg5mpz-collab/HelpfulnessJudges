@@ -107,12 +107,17 @@ def load_preamble() -> str:
 
 
 def deployable(rubrics: list[Rubric], prefer_traced: bool = False) -> list[Rubric]:
-    """Drop one side of every variant pair.
+    """Drop one side of every variant pair — base judge OR traced variant, never both.
 
-    Arize has no equivalent of the parent harness's mutual-exclusion guard:
-    attaching both a judge and its variant to a task silently double-counts the
-    same defect and inflates any suite-level mean. We enforce it here, at
-    provisioning time, because nothing downstream will.
+    AgentCore has no equivalent of the parent harness's mutual-exclusion guard:
+    attaching both a judge and its variant to an online evaluation config
+    silently double-counts the same defect and inflates any suite-level mean. We
+    enforce it here, at provisioning time, because nothing downstream will.
+
+    This is a rule about the *default* set, not about what may be scored. Both
+    sides ship a rubric and a 60-row test set, and `--judge <variant>` names one
+    explicitly — comparing the pair offline is the reason the variant exists.
+    Only deployment has to choose.
     """
     variants = {r.variant_of: r for r in rubrics if r.variant_of}
     if prefer_traced:

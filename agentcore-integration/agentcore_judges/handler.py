@@ -28,54 +28,25 @@ import logging
 import os
 from typing import Any
 
+# Re-exported, not redefined. The return boundary used to live in this module,
+# until the offline scorer needed it: importing this module runs the two lines
+# below and parses ten rubrics, which is what a Lambda container wants and not
+# what `agentcore-judges list` wants. `boundary` holds the one implementation and
+# every consumer — this handler included — reaches it there.
+from .boundary import MAX_EXPLANATION, SCOPE, _compact, agentcore_result  # noqa: F401
 from .judge import run
 from .naming import to_judge_id
 from .spans import from_session_spans, target_index
 from .spec import load_rubrics
 
+# Root logger, deliberately: in a Lambda container this process serves nothing
+# but this handler. It is also why nothing offline may import this module.
 log = logging.getLogger()
 log.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
 
 # Loaded once per container, not per invocation — rubric parsing is pure CPU and
 # would otherwise be paid on every judged turn.
 _RUBRICS = {r.id: r for r in load_rubrics()}
-
-# Payload budget. AgentCore stores `explanation` on an OTel event; keep it small
-# enough to stay readable in the CloudWatch console.
-MAX_EXPLANATION = int(os.environ.get("MAX_EXPLANATION_CHARS", "9000"))
-
-
-def _compact(verdict, conv, target: int | None) -> str:
-    """Serialise the verdict into the one free-text field AgentCore gives us."""
-    p = verdict.payload
-    payload = {
-        "v": 1,
-        "j": verdict.judge_id,
-        "trig": p.get("trigger_present"),
-        "inj": p.get("injection_suspected"),
-        "chk": [{"id": c["id"], "ok": c["verdict"], "sp": c.get("span", "")[:240]}
-                for c in p.get("checks", [])],
-        "ev": [e[:240] for e in (p.get("evidence") or [])[:6]],
-        "why": (p.get("reasoning") or "")[:700],
-        "conf": p.get("confidence"),
-        # k=5 provenance. None of this survives into AgentCore's own fields, and
-        # it is what the suite uses to decide whether to trust a verdict.
-        "k": {"n": len(verdict.samples), "s": verdict.samples,
-              "unan": verdict.unanimous, "hf": verdict.hard_failure_votes,
-              "review": verdict.needs_human_review},
-        "x": {k: v for k, v in p.items() if k not in (
-            "trigger_present", "injection_suspected", "checks", "evidence",
-            "reasoning", "score", "confidence")},
-        "meta": {"session": conv.session_id, "target_turn": target,
-                 "turns": len(conv.turns)},
-    }
-    out = json.dumps(payload, separators=(",", ":"), default=str)
-    if len(out) > MAX_EXPLANATION:
-        payload["ev"] = payload["ev"][:2]
-        payload["chk"] = [{**c, "sp": c["sp"][:80]} for c in payload["chk"]]
-        payload["truncated"] = True
-        out = json.dumps(payload, separators=(",", ":"), default=str)
-    return out[:MAX_EXPLANATION]
 
 
 def handler(event: dict[str, Any], context: Any = None) -> dict[str, Any]:
@@ -95,19 +66,19 @@ def handler(event: dict[str, Any], context: Any = None) -> dict[str, Any]:
 
     tgt = event.get("evaluationTarget") or {}
     if rubric.unit == "conversation":
-        target, scope = None, "the whole conversation"
+        target = None
     else:
         target = target_index(conv, tgt.get("traceIds") or [])
-        scope = "the assistant turn marked `>>> TARGET`"
+    scope = SCOPE[rubric.unit]
 
     verdict = run(rubric, conv.render(target), scope)
-    explanation = _compact(verdict, conv, target)
+    result = agentcore_result(verdict, conv, target)
 
     log.info(json.dumps({
         "judge": judge_id, "score": verdict.score, "k": len(verdict.samples),
         "unanimous": verdict.unanimous, "review": verdict.needs_human_review,
-        "explanation_chars": len(explanation), "sample_errors": len(verdict.errors),
+        "explanation_chars": len(result["explanation"]),
+        "sample_errors": len(verdict.errors),
     }))
 
-    return {"label": verdict.label, "value": float(verdict.score),
-            "explanation": explanation}
+    return result

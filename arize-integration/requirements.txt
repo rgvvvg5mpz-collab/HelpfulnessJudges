@@ -1,9 +1,12 @@
-# Runtime. `render`, `verify` and `check-drift` need only PyYAML — they work
-# with no Arize account and no network, which is how you inspect everything
-# before it touches a tenant.
+# Offline commands (list, check-drift, render, tasks, verify, score --dry-run)
+# need only PyYAML.
 PyYAML>=6.0
 
-# Needed only for `provision`, `backfill` and `export` (anything that talks to
-# Arize). Imported lazily, so the rest of the CLI runs without it installed.
-arize>=8.50.0 ; extra == "deploy"
-pandas>=2.0 ; extra == "deploy"
+# Provisioning and export talk to Arize.
+arize>=8.50.0
+pandas>=2.0
+
+# `score` without --dry-run calls Anthropic directly. That is offline rubric
+# validation only — Arize itself never uses this path — but it is the one way to
+# find out whether a rubric edit helped before you push it to a live space.
+anthropic>=1.0.0

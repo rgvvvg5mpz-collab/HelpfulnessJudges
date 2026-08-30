@@ -20,6 +20,8 @@ from typing import Any
 
 import yaml
 
+from . import BANDS
+
 ROOT = Path(__file__).resolve().parent.parent
 RUBRIC_DIR = ROOT / "rubrics"
 PREAMBLE = RUBRIC_DIR / "_preamble.md"
@@ -94,7 +96,9 @@ def output_schema(rubric: "Rubric") -> dict[str, Any]:
             },
         },
         "reasoning": {"type": "string"},
-        "score": {"type": "number", "enum": [0, 0.5, 1.0]},
+        # The same three points the offline scorer bands on and `verify`
+        # labels with — one definition, so the schema cannot drift from them.
+        "score": {"type": "number", "enum": list(BANDS)},
         "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
     }
     required = ["trigger_present", "injection_suspected", "evidence", "checks",

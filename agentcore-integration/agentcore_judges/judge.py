@@ -27,12 +27,30 @@ import statistics
 from dataclasses import dataclass, field
 from typing import Any
 
+from . import LABEL_OF
 from .spec import Rubric, load_preamble, load_tail, output_schema
 
 MODEL = os.environ.get("JUDGE_MODEL", "claude-opus-5")
 EFFORT = os.environ.get("JUDGE_EFFORT", "high")
 MAX_TOKENS = int(os.environ.get("JUDGE_MAX_TOKENS", "16000"))
 K = int(os.environ.get("JUDGE_K", "5"))
+
+
+class AllSamplesFailed(RuntimeError):
+    """No sample for one item produced a payload.
+
+    Carries the causes themselves, not just their `str()`. A caller has to be
+    able to tell "we never got an answer" (connection reset, 429, expired key)
+    from "we got an answer and it was not usable", because only the second is a
+    fact about the judge; folding the first into the same bucket turns an
+    outage into the claim that a judge missed a hard failure.
+    """
+
+    def __init__(self, judge_id: str, causes: list[BaseException]) -> None:
+        self.judge_id = judge_id
+        self.causes = list(causes)
+        shown = ", ".join(f"{type(c).__name__}: {c}" for c in self.causes[:2])
+        super().__init__(f"{judge_id}: all {len(self.causes)} samples failed: {shown}")
 
 
 @dataclass
@@ -45,7 +63,7 @@ class Verdict:
 
     @property
     def label(self) -> str:
-        return {1.0: "1.0", 0.5: "0.5", 0.0: "0"}[float(self.score)]
+        return LABEL_OF[float(self.score)]
 
     @property
     def unanimous(self) -> bool:
@@ -112,21 +130,31 @@ def run(rubric: Rubric, transcript: str, scope: str, *, k: int = K,
 
     req = build_request(rubric, transcript, scope)
     payloads: list[dict[str, Any]] = []
-    errors: list[str] = []
+    causes: list[BaseException] = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=k) as pool:
         for fut in [pool.submit(_one, client, req) for _ in range(k)]:
             try:
                 payloads.append(fut.result())
             except Exception as e:  # noqa: BLE001 — one bad sample must not sink the item
-                errors.append(f"{type(e).__name__}: {e}")
+                causes.append(e)
 
+    errors = [f"{type(c).__name__}: {c}" for c in causes]
     if not payloads:
-        raise RuntimeError(f"{rubric.id}: all {k} samples failed: {errors[:2]}")
+        raise AllSamplesFailed(rubric.id, causes)
 
     scores = [float(p["score"]) for p in payloads]
-    median = statistics.median(scores)
+    # median_low, not median. The scale has exactly three points, and the plain
+    # median of an even number of samples interpolates between them: lose one of
+    # k=5 to a transport error and [0.5, 0.5, 1.0, 1.0] yields 0.75, which is not
+    # a score this suite can express. `Verdict.label` would raise KeyError and
+    # take the whole invocation down over a single dropped sample. median_low
+    # always returns a value some sample actually produced, and on a tie it takes
+    # the lower one — which is the right direction for a judge, because the cost
+    # of missing a hard failure is higher than the cost of flagging a warning.
+    median = statistics.median_low(scores)
     # Report the payload belonging to a sample that agrees with the median, so
-    # the reasoning a human reads actually justifies the score they see.
+    # the reasoning a human reads actually justifies the score they see. With
+    # median_low this always finds one; the fallback is for a future scale change.
     chosen = next((p for p in payloads if float(p["score"]) == median), payloads[0])
     return Verdict(judge_id=rubric.id, score=median, payload=chosen,
                    samples=scores, errors=errors)

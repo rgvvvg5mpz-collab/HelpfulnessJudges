@@ -48,6 +48,18 @@ def _escape(text: str, style: BraceStyle) -> str:
     raise ValueError(f"unknown brace style {style!r}")
 
 
+def unescape(text: str, style: BraceStyle) -> str:
+    """Undo `_escape`. AX applies `.format` server-side, which collapses the
+    doubled braces back to single ones before the model ever sees the prompt.
+    Anything scoring the template locally has to do the same or it grades a
+    prompt the platform will never send — the rubrics carry `{}` in their JSON
+    examples, so the difference is real, not theoretical.
+    """
+    if style == "single":
+        return text.replace("{{", "{").replace("}}", "}")
+    return text
+
+
 def _var(name: str, style: BraceStyle) -> str:
     return f"{{{name}}}" if style == "single" else f"{{{{{name}}}}}"
 
@@ -58,6 +70,7 @@ class RenderedTemplate:
     unit: str
     variable: str
     template: str
+    brace_style: BraceStyle = "single"
 
     @property
     def hash(self) -> str:
@@ -97,6 +110,7 @@ def render(rubric: Rubric, brace_style: BraceStyle = "single") -> RenderedTempla
         unit=rubric.unit,
         variable=variable,
         template="\n".join(parts),
+        brace_style=brace_style,
     )
 
 

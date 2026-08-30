@@ -10,6 +10,9 @@ from . import RATING_SCALE, UNIT_TO_LEVEL
 from .naming import to_evaluator_name
 from .provision import (ModelConfig, TIERS, online_config_payload, plan, read_lock,
                         validate_request, write_lock)
+from .score import (DEFAULT_EFFORT, DEFAULT_MODEL, api_key_present, band_shortfalls,
+                    confirm, default_judges, dry_run_report, metrics_for, plan_prompts,
+                    prepare_out, render_report, run_live, write_results)
 from .spec import check_drift, deployable, load_rubrics
 from .transform import transform
 
@@ -42,6 +45,33 @@ def main(argv: list[str] | None = None) -> int:
         p.add_argument("--traced", action="store_true")
         if n == "provision":
             p.add_argument("--region"); p.add_argument("--apply", action="store_true")
+
+    s = sub.add_parser("score", help="score the TRANSFORMED prompts against data/testsets/",
+                       description="Score the transformed prompts — not the raw rubrics — "
+                                   "against the labelled test sets. Simulates how AgentCore "
+                                   "presents a trace; see native_judges/score.py.")
+    s.add_argument("--judge", action="append", dest="judges",
+                   help="repeatable; default is every deployable judge (10 — a variant "
+                        "and its base are mutually exclusive, so capability-honesty-traced "
+                        "is out by default). Naming a variant here scores it anyway: "
+                        "`--judge capability-honesty-traced` is how you compare the pair")
+    s.add_argument("--limit", type=int, default=6,
+                   help="samples per judge, balanced across the three expected_score "
+                        "bands; 0 means every item the test set holds — 60 as shipped "
+                        "(default: 6). A band with too few items is under-drawn and the "
+                        "shortfall is printed")
+    s.add_argument("--k", type=int, default=1,
+                   help="samples per item (default: 1). AgentCore's native path runs the "
+                        "evaluator once per trace with no repetition, so k>1 measures this "
+                        "prompt's self-consistency, not the deployed behaviour")
+    s.add_argument("--dry-run", action="store_true",
+                   help="build every prompt, call nothing; the default with no API key")
+    s.add_argument("--out", type=Path, help="write per-item results as JSONL")
+    s.add_argument("--seed", type=int, default=0)
+    s.add_argument("--yes", action="store_true", help="skip the cost confirmation")
+    s.add_argument("--model", default=DEFAULT_MODEL)
+    s.add_argument("--effort", default=DEFAULT_EFFORT,
+                   choices=("low", "medium", "high", "xhigh", "max"))
 
     o = sub.add_parser("online-config")
     o.add_argument("--tier", choices=sorted(TIERS), required=True)
@@ -136,6 +166,31 @@ def _run(a) -> int:
                 "evaluatorId": eid, "evaluatorName": p["evaluatorName"], "level": p["level"]}
             print(f"  created   {p['evaluatorName']}  {eid}")
         write_lock(lock)
+        return 0
+
+    if a.cmd == "score":
+        # dict.fromkeys, not set: a repeated --judge must not be billed twice in
+        # the count the operator confirms, and the report rows must stay in the
+        # order they were asked for.
+        judges = list(dict.fromkeys(a.judges or default_judges()))
+        prompts = plan_prompts(judges, a.limit, a.seed, a.k)
+        shortfalls = band_shortfalls(judges, a.limit)
+        if a.dry_run or not api_key_present():
+            print(dry_run_report(prompts, a.model, a.effort, a.k, shortfalls))
+            return 0
+        # Before confirm(), and so before a single call: an unwritable --out
+        # discovered after the sweep costs the whole sweep and saves nothing.
+        out = prepare_out(a.out) if a.out else None
+        items = len({(p.judge_id, p.item_id) for p in prompts})
+        if refusal := confirm(prompts, len(judges), items, a.k, a.yes):
+            print(refusal, file=sys.stderr)
+            return 2
+        results = run_live(prompts, a.model, a.effort)
+        print(render_report([metrics_for(j, [r for r in results if r.judge_id == j])
+                             for j in judges], shortfalls))
+        if out:
+            write_results(out, results)
+            print(f"\n{len(results)} items written to {out}")
         return 0
 
     if a.cmd == "online-config":
